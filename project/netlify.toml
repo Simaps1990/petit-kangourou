@@ -5,6 +5,8 @@
   command = "npm run build"
   # Dossier de sortie
   publish = "dist"
+  # Dossier des fonctions serverless
+  functions = "netlify/functions"
 
 # Désactiver le scan de secrets (la clé Supabase ANON est publique par design)
 [build.environment]
