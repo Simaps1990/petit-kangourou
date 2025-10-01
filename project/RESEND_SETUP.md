@@ -8,7 +8,6 @@
 - ✅ **Fiable** : Vos emails arrivent bien dans la boîte de réception
 
 ## 🚀 Configuration (5 minutes)
-
 ### Étape 1 : Créer un compte Resend
 
 1. Allez sur **https://resend.com**
