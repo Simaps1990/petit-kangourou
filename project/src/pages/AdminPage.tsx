@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Eye, EyeOff, Users, Calendar, Plus, Trash2, CreditCard as Edit, Clock, Mail, Phone, BookOpen, Package, HelpCircle, Save, X, Settings, Star, Heart, CheckCircle, AlertCircle } from 'lucide-react';
+import { authService } from '../lib/auth';
 
 interface Booking {
   id: string;
@@ -71,8 +72,10 @@ interface Client {
 
 function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loginData, setLoginData] = useState({ username: '', password: '' });
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'bookings' | 'slots' | 'clients' | 'blog' | 'services' | 'faq' | 'settings'>('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
@@ -229,18 +232,26 @@ function AdminPage() {
     setClients(Array.from(clientsMap.values()));
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginData.username === 'admin' && loginData.password === 'paola') {
+    setIsLoading(true);
+    setLoginError(null);
+
+    const { user, error } = await authService.signIn(loginData.email, loginData.password);
+    
+    setIsLoading(false);
+    
+    if (error) {
+      setLoginError(error);
+    } else if (user) {
       setIsLoggedIn(true);
-    } else {
-      alert('Identifiants incorrects');
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await authService.signOut();
     setIsLoggedIn(false);
-    setLoginData({ username: '', password: '' });
+    setLoginData({ email: '', password: '' });
   };
 
   const addTimeSlot = () => {
@@ -407,14 +418,20 @@ function AdminPage() {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
+            {loginError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {loginError}
+              </div>
+            )}
+            
             <div>
-              <label className="block text-[#c27275] font-medium mb-2">Identifiant</label>
+              <label className="block text-[#c27275] font-medium mb-2">Email</label>
               <input
-                type="text"
-                value={loginData.username}
-                onChange={(e) => setLoginData({...loginData, username: e.target.value})}
+                type="email"
+                value={loginData.email}
+                onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                 className="w-full px-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
-                placeholder="admin"
+                placeholder="paola.paviot@gmail.com"
                 required
               />
             </div>
@@ -427,7 +444,7 @@ function AdminPage() {
                   value={loginData.password}
                   onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                   className="w-full px-4 py-3 pr-12 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
-                  placeholder="paola"
+                  placeholder="••••••••••"
                   required
                 />
                 <button
@@ -442,9 +459,10 @@ function AdminPage() {
 
             <button
               type="submit"
-              className="w-full bg-[#c27275] text-white py-3 rounded-lg font-semibold hover:bg-[#c27275] transition-colors"
+              disabled={isLoading}
+              className="w-full bg-[#c27275] text-white py-3 rounded-lg font-semibold hover:bg-[#c27275] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Se connecter
+              {isLoading ? 'Connexion...' : 'Se connecter'}
             </button>
           </form>
         </div>
