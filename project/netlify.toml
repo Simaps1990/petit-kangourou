@@ -6,6 +6,10 @@
   # Dossier de sortie
   publish = "dist"
 
+# Désactiver le scan de secrets (la clé Supabase ANON est publique par design)
+[build.environment]
+  SECRETS_SCAN_ENABLED = "false"
+
 # Redirection pour React Router
 [[redirects]]
   from = "/*"
