@@ -1,0 +1,22 @@
+# Configuration Netlify pour Petit Kangourou
+
+[build]
+  # Commande de build
+  command = "npm run build"
+  # Dossier de sortie
+  publish = "dist"
+
+# Redirection pour React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers de sécurité
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
