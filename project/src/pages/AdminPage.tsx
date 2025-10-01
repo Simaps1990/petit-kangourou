@@ -170,14 +170,16 @@ function AdminPage() {
       .order('time', { ascending: true });
     
     if (data && !error) {
-      setTimeSlots(data.map(slot => ({
+      // Créer un nouveau tableau pour forcer le re-render
+      const newSlots = data.map(slot => ({
         id: slot.id,
         date: slot.date,
         time: slot.time,
         available: slot.available,
         maxSpots: slot.max_spots,
         bookedSpots: slot.booked_spots
-      })));
+      }));
+      setTimeSlots([...newSlots]);
     }
   };
 
