@@ -16,6 +16,7 @@ export const handler: Handler = async (event) => {
 
   try {
     const { type, data }: EmailRequest = JSON.parse(event.body || '{}');
+    // @ts-ignore - process.env est disponible dans Netlify Functions
     const resendApiKey = process.env.RESEND_API_KEY;
 
     if (!resendApiKey) {

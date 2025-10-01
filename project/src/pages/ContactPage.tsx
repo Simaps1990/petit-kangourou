@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Baby } from 'lucide-react';
+import { Send, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { emailService } from '../lib/email';
 
@@ -57,44 +57,15 @@ function ContactPage() {
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
       
       // Réinitialiser le message de confirmation après 3 secondes
-      setTimeout(() => setIsSubmitted(false), 3000);
     } else {
       alert('Erreur lors de l\'envoi du message. Veuillez réessayer.');
     }
   };
 
-  const contactInfo = [
-    {
-      icon: Phone,
-      title: 'Téléphone',
-      content: '06 XX XX XX XX',
-      description: 'Lun-Ven: 9h-18h'
-    },
-    {
-      icon: Mail,
-      title: 'Email',
-      content: 'contact@portagedouceur.fr',
-      description: 'Réponse sous 24h'
-    },
-    {
-      icon: MapPin,
-      title: 'Localisation',
-      content: 'Versailles, France',
-      description: 'Déplacement possible'
-    },
-    {
-      icon: Clock,
-      title: 'Horaires',
-      content: 'Lun-Sam: 9h-18h',
-      description: 'Dimanche: Fermé'
-    }
-  ];
-
   const subjects = [
     'Demande de renseignements',
     'Prise de rendez-vous',
     'Formation en groupe',
-    'Suivi personnalisé',
     'Autre'
   ];
 
@@ -255,7 +226,7 @@ function ContactPage() {
           </h2>
           {faqs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {faqs.map((faq, index) => (
+              {faqs.map((faq) => (
                 <div 
                   key={faq.id}
                   className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
