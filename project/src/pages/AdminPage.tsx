@@ -169,7 +169,17 @@ function AdminPage() {
       .order('date', { ascending: true })
       .order('time', { ascending: true });
     
-    if (data && !error) {
+    console.log('🔄 Admin - Chargement créneaux depuis Supabase');
+    
+    if (error) {
+      console.error('❌ Erreur:', error);
+      setTimeSlots([]);
+      return;
+    }
+    
+    if (data) {
+      console.log('📊 Créneaux reçus:', data.length, data);
+      
       // Créer un nouveau tableau pour forcer le re-render
       const newSlots = data.map(slot => ({
         id: slot.id,
@@ -179,7 +189,12 @@ function AdminPage() {
         maxSpots: slot.max_spots,
         bookedSpots: slot.booked_spots
       }));
-      setTimeSlots([...newSlots]);
+      
+      console.log('✅ Créneaux mappés:', newSlots);
+      setTimeSlots(newSlots);
+    } else {
+      console.log('⚠️ Aucune donnée reçue');
+      setTimeSlots([]);
     }
   };
 

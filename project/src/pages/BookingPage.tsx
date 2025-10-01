@@ -67,7 +67,15 @@ function BookingPage() {
       .order('date', { ascending: true })
       .order('time', { ascending: true });
     
-    if (data && !error) {
+    if (error) {
+      console.error('Erreur chargement créneaux:', error);
+      setTimeSlots([]);
+      return;
+    }
+    
+    if (data) {
+      console.log('📅 Créneaux chargés depuis Supabase:', data.length);
+      
       // Mapper et filtrer les créneaux qui ont encore des places disponibles
       const mappedSlots = data.map(slot => ({
         id: slot.id,
@@ -82,7 +90,11 @@ function BookingPage() {
         const spotsLeft = slot.maxSpots - slot.bookedSpots;
         return spotsLeft > 0;
       });
+      
+      console.log('✅ Créneaux disponibles:', availableSlots.length);
       setTimeSlots(availableSlots);
+    } else {
+      setTimeSlots([]);
     }
   };
 
