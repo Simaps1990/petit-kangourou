@@ -496,6 +496,7 @@ function AdminPage() {
                   onChange={(e) => setLoginData({...loginData, password: e.target.value})}
                   className="w-full px-4 py-3 pr-12 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
                   placeholder="••••••••••"
+                  autoComplete="current-password"
                   required
                 />
                 <button

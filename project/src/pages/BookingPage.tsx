@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Mail, Phone, Baby, Check, Search, Download } from 'lucide-react';
+import { Calendar, User, Mail, Phone, Baby, Check, Search, Download } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { emailService } from '../lib/email';
 
@@ -182,7 +182,8 @@ function BookingPage() {
       price: selectedService.price
     });
 
-    await emailService.sendAdminNotification({
+    // Envoyer notification admin (ne pas bloquer si erreur)
+    emailService.sendAdminNotification({
       clientName: clientDetails.name,
       clientEmail: clientDetails.email,
       serviceName: selectedService.title,
@@ -190,7 +191,7 @@ function BookingPage() {
       time: selectedSlot.time,
       bookingCode: bookingId,
       price: selectedService.price
-    });
+    }).catch(err => console.log('Info: Email admin non envoyé', err));
   };
 
   const handleSearchBooking = async () => {
