@@ -6,6 +6,16 @@ import BookingPage from './pages/BookingPage';
 import ContactPage from './pages/ContactPage';
 import AdminPage from './pages/AdminPage';
 
+function ScrollToTop() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  return null;
+}
+
 function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
@@ -132,6 +142,7 @@ function Footer() {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-white">
         <Navigation />
         <main className="pt-16">

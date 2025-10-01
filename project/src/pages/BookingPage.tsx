@@ -8,6 +8,8 @@ interface TimeSlot {
   date: string;
   time: string;
   available: boolean;
+  maxSpots: number;
+  bookedSpots: number;
 }
 
 interface Service {
@@ -45,6 +47,7 @@ function BookingPage() {
     babyAge: '',
     notes: ''
   });
+  const [spotsRequested, setSpotsRequested] = useState(1);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [searchCode, setSearchCode] = useState('');
   const [foundBooking, setFoundBooking] = useState<Booking | null>(null);
@@ -65,7 +68,21 @@ function BookingPage() {
       .order('time', { ascending: true });
     
     if (data && !error) {
-      setTimeSlots(data);
+      // Mapper et filtrer les créneaux qui ont encore des places disponibles
+      const mappedSlots = data.map(slot => ({
+        id: slot.id,
+        date: slot.date,
+        time: slot.time,
+        available: slot.available,
+        maxSpots: slot.max_spots,
+        bookedSpots: slot.booked_spots
+      }));
+      
+      const availableSlots = mappedSlots.filter(slot => {
+        const spotsLeft = slot.maxSpots - slot.bookedSpots;
+        return spotsLeft > 0;
+      });
+      setTimeSlots(availableSlots);
     }
   };
 
@@ -130,13 +147,25 @@ function BookingPage() {
         baby_age: clientDetails.babyAge,
         notes: clientDetails.notes,
         status: 'confirmed',
-        spots_reserved: 1
+        spots_reserved: spotsRequested
       }]);
 
     if (insertError) {
       console.error('Erreur sauvegarde réservation:', insertError);
       alert('Erreur lors de la réservation. Veuillez réessayer.');
       return;
+    }
+
+    // Mettre à jour le nombre de places réservées dans le créneau
+    const { error: updateError } = await supabase
+      .from('time_slots')
+      .update({ 
+        booked_spots: selectedSlot.bookedSpots + spotsRequested 
+      })
+      .eq('id', selectedSlot.id);
+
+    if (updateError) {
+      console.error('Erreur mise à jour créneau:', updateError);
     }
     
     setBooking(newBooking);
@@ -384,15 +413,19 @@ END:VCALENDAR`;
                     {formatDate(date)}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {slots.map((slot) => (
-                      <button
-                        key={slot.id}
-                        onClick={() => handleSlotSelect(slot)}
-                        className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium"
-                      >
-                        {slot.time}
-                      </button>
-                    ))}
+                    {slots.map((slot) => {
+                      const spotsLeft = slot.maxSpots - slot.bookedSpots;
+                      return (
+                        <button
+                          key={slot.id}
+                          onClick={() => handleSlotSelect(slot)}
+                          className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium flex flex-col items-center gap-1"
+                        >
+                          <span className="text-lg">{slot.time}</span>
+                          <span className="text-xs opacity-70">{spotsLeft} place{spotsLeft > 1 ? 's' : ''}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
@@ -472,6 +505,22 @@ END:VCALENDAR`;
                       placeholder="ex: 3 mois"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-[#c27275] font-medium mb-2">Nombre de places *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedSlot.maxSpots - selectedSlot.bookedSpots}
+                    required
+                    value={spotsRequested}
+                    onChange={(e) => setSpotsRequested(Math.min(parseInt(e.target.value) || 1, selectedSlot.maxSpots - selectedSlot.bookedSpots))}
+                    className="w-full px-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                  />
+                  <p className="text-xs text-[#c27275]/60 mt-1">
+                    Places disponibles : {selectedSlot.maxSpots - selectedSlot.bookedSpots}
+                  </p>
                 </div>
               </div>
 

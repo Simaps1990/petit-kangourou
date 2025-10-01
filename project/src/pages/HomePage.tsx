@@ -139,9 +139,9 @@ function HomePage() {
                 Créez un lien unique avec votre bébé dans le respect de son développement naturel.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="px-8 py-4 bg-[#fff1ee] text-[#c27275] rounded-full font-semibold hover:bg-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+                <a href="/reservation" className="px-8 py-4 bg-[#fff1ee] text-[#c27275] rounded-full font-semibold hover:bg-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-center">
                   Réserver une consultation
-                </button>
+                </a>
               </div>
             </div>
             <div className="relative animate-float">
