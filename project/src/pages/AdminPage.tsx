@@ -672,20 +672,20 @@ function AdminPage() {
           {/* Time Slots Tab */}
           {activeTab === 'slots' && (
             <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-[#c27275]">Gestion des créneaux</h2>
-                <div className="flex gap-4">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-[#c27275] mb-4">Gestion des créneaux</h2>
+                <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     type="date"
                     value={newSlot.date}
                     onChange={(e) => setNewSlot({...newSlot, date: e.target.value})}
-                    className="px-3 py-2 border border-[#c27275]/20 rounded-lg"
+                    className="px-3 py-2 border border-[#c27275]/20 rounded-lg flex-1"
                   />
                   <input
                     type="time"
                     value={newSlot.time}
                     onChange={(e) => setNewSlot({...newSlot, time: e.target.value})}
-                    className="px-3 py-2 border border-[#c27275]/20 rounded-lg"
+                    className="px-3 py-2 border border-[#c27275]/20 rounded-lg flex-1"
                   />
                   <input
                     type="number"
@@ -694,11 +694,11 @@ function AdminPage() {
                     value={newSlot.maxSpots}
                     onChange={(e) => setNewSlot({...newSlot, maxSpots: parseInt(e.target.value)})}
                     placeholder="Places"
-                    className="px-3 py-2 border border-[#c27275]/20 rounded-lg w-20"
+                    className="px-3 py-2 border border-[#c27275]/20 rounded-lg flex-1 sm:w-24"
                   />
                   <button
                     onClick={addTimeSlot}
-                    className="px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275] flex items-center gap-2"
+                    className="px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 flex items-center justify-center gap-2 flex-1 sm:flex-initial"
                   >
                     <Plus className="h-4 w-4" />
                     Ajouter
@@ -1077,6 +1077,17 @@ function AdminPage() {
                       onChange={(e) => setSettings({...settings, siteDescription: e.target.value})}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
                     />
+                  </div>
+                  
+                  {/* Bouton Sauvegarder */}
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      onClick={saveSettings}
+                      className="px-6 py-3 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 flex items-center gap-2 font-medium transition-colors"
+                    >
+                      <Save className="h-5 w-5" />
+                      Sauvegarder les paramètres
+                    </button>
                   </div>
                 </div>
 
