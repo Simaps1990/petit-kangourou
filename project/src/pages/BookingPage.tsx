@@ -8,6 +8,8 @@ interface TimeSlot {
   date: string;
   time: string;
   available: boolean;
+  max_spots?: number;
+  booked_spots?: number;
 }
 
 interface Service {
@@ -65,7 +67,16 @@ function BookingPage() {
       .order('time', { ascending: true });
     
     if (data && !error) {
-      setTimeSlots(data);
+      // Mapper les noms de colonnes snake_case vers camelCase
+      const slots = data.map(slot => ({
+        id: slot.id,
+        date: slot.date,
+        time: slot.time,
+        available: slot.available,
+        max_spots: slot.max_spots || 1,
+        booked_spots: slot.booked_spots || 0
+      }));
+      setTimeSlots(slots);
     }
   };
 
@@ -384,15 +395,21 @@ END:VCALENDAR`;
                     {formatDate(date)}
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {slots.map((slot) => (
-                      <button
-                        key={slot.id}
-                        onClick={() => handleSlotSelect(slot)}
-                        className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium"
-                      >
-                        {slot.time}
-                      </button>
-                    ))}
+                    {slots.map((slot) => {
+                      const placesRestantes = (slot.max_spots || 1) - (slot.booked_spots || 0);
+                      return (
+                        <button
+                          key={slot.id}
+                          onClick={() => handleSlotSelect(slot)}
+                          className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium flex flex-col items-center gap-1"
+                        >
+                          <span className="text-lg font-bold">{slot.time}</span>
+                          <span className="text-xs opacity-75">
+                            {placesRestantes} place{placesRestantes > 1 ? 's' : ''}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))}

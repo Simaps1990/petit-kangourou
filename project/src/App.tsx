@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 import ContactPage from './pages/ContactPage';
 import AdminPage from './pages/AdminPage';
+import ScrollToTop from './components/ScrollToTop';
 
 function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -132,6 +133,7 @@ function Footer() {
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="min-h-screen bg-white">
         <Navigation />
         <main className="pt-16">
