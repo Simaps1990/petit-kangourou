@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Eye, EyeOff, Users, Calendar, Plus, Trash2, CreditCard as Edit, Clock, Mail, Phone, BookOpen, Package, HelpCircle, Save, X, Settings, Star, Heart, CheckCircle, AlertCircle } from 'lucide-react';
 import { authService } from '../lib/auth';
+import { supabase } from '../lib/supabase';
+import { emailService } from '../lib/email';
 
 interface Booking {
   id: string;
@@ -135,69 +137,90 @@ function AdminPage() {
     setTimeout(() => setShowSaveSuccess(false), 3000);
   };
 
-  const loadBookings = () => {
-    const savedBookings: Booking[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith('booking-')) {
-        const booking = JSON.parse(localStorage.getItem(key) || '');
-        savedBookings.push(booking);
-      }
-    }
-    setBookings(savedBookings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-  };
-
-  const loadTimeSlots = () => {
-    const savedSlots = localStorage.getItem('time-slots');
-    if (savedSlots) {
-      setTimeSlots(JSON.parse(savedSlots));
-    } else {
-      // Générer des créneaux d'exemple
-      const slots: TimeSlot[] = [];
-      const today = new Date();
-      
-      for (let i = 1; i <= 30; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        
-        if (date.getDay() !== 0) { // Éviter les dimanches
-          const times = ['09:00', '11:00', '14:00', '16:00'];
-          times.forEach(time => {
-            slots.push({
-              id: `${date.toISOString().split('T')[0]}-${time}`,
-              date: date.toISOString().split('T')[0],
-              time: time,
-              available: Math.random() > 0.3,
-              maxSpots: Math.random() > 0.5 ? 1 : 3,
-              bookedSpots: 0
-            });
-          });
-        }
-      }
-      
-      setTimeSlots(slots);
-      localStorage.setItem('time-slots', JSON.stringify(slots));
+  const loadBookings = async () => {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (data && !error) {
+      setBookings(data.map(booking => ({
+        id: booking.id,
+        serviceId: booking.service_id,
+        serviceName: booking.service_name,
+        date: booking.date,
+        time: booking.time,
+        clientName: booking.client_name,
+        clientEmail: booking.client_email,
+        clientPhone: booking.client_phone,
+        babyAge: booking.baby_age,
+        notes: booking.notes,
+        status: booking.status,
+        spotsReserved: booking.spots_reserved || 1,
+        createdAt: booking.created_at
+      })));
     }
   };
 
-  const loadBlogPosts = () => {
-    const savedPosts = localStorage.getItem('blog-posts');
-    if (savedPosts) {
-      setBlogPosts(JSON.parse(savedPosts));
+  const loadTimeSlots = async () => {
+    const { data, error } = await supabase
+      .from('time_slots')
+      .select('*')
+      .order('date', { ascending: true })
+      .order('time', { ascending: true });
+    
+    if (data && !error) {
+      setTimeSlots(data.map(slot => ({
+        id: slot.id,
+        date: slot.date,
+        time: slot.time,
+        available: slot.available,
+        maxSpots: slot.max_spots,
+        bookedSpots: slot.booked_spots
+      })));
     }
   };
 
-  const loadServices = () => {
-    const savedServices = localStorage.getItem('services');
-    if (savedServices) {
-      setServices(JSON.parse(savedServices));
+  const loadBlogPosts = async () => {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (data && !error) {
+      setBlogPosts(data.map(post => ({
+        id: post.id,
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        image: post.image,
+        date: post.date,
+        readTime: post.read_time,
+        published: post.published,
+        createdAt: post.created_at
+      })));
     }
   };
 
-  const loadFaqs = () => {
-    const savedFaqs = localStorage.getItem('faqs');
-    if (savedFaqs) {
-      setFaqs(JSON.parse(savedFaqs));
+  const loadServices = async () => {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('id', { ascending: true });
+    
+    if (data && !error) {
+      setServices(data);
+    }
+  };
+
+  const loadFaqs = async () => {
+    const { data, error } = await supabase
+      .from('faqs')
+      .select('*')
+      .order('order', { ascending: true });
+    
+    if (data && !error) {
+      setFaqs(data);
     }
   };
 
@@ -254,43 +277,64 @@ function AdminPage() {
     setLoginData({ email: '', password: '' });
   };
 
-  const addTimeSlot = () => {
+  const addTimeSlot = async () => {
     if (newSlot.date && newSlot.time) {
-      const slot: TimeSlot = {
-        id: `${newSlot.date}-${newSlot.time}`,
-        date: newSlot.date,
-        time: newSlot.time,
-        available: true,
-        maxSpots: newSlot.maxSpots,
-        bookedSpots: 0
-      };
-      const updatedSlots = [...timeSlots, slot];
-      setTimeSlots(updatedSlots);
-      localStorage.setItem('time-slots', JSON.stringify(updatedSlots));
-      setNewSlot({ date: '', time: '', maxSpots: 1 });
+      const slotId = `${newSlot.date}-${newSlot.time}`;
+      
+      const { error } = await supabase
+        .from('time_slots')
+        .insert([{
+          id: slotId,
+          date: newSlot.date,
+          time: newSlot.time,
+          available: true,
+          max_spots: newSlot.maxSpots,
+          booked_spots: 0
+        }]);
+      
+      if (!error) {
+        await loadTimeSlots();
+        setNewSlot({ date: '', time: '', maxSpots: 1 });
+      } else {
+        alert('Erreur lors de l\'ajout du créneau');
+      }
     }
   };
 
-  const toggleSlotAvailability = (slotId: string) => {
-    const updatedSlots = timeSlots.map(slot => 
-      slot.id === slotId ? { ...slot, available: !slot.available } : slot
-    );
-    setTimeSlots(updatedSlots);
-    localStorage.setItem('time-slots', JSON.stringify(updatedSlots));
+  const toggleSlotAvailability = async (slotId: string) => {
+    const slot = timeSlots.find(s => s.id === slotId);
+    if (!slot) return;
+    
+    const { error } = await supabase
+      .from('time_slots')
+      .update({ available: !slot.available })
+      .eq('id', slotId);
+    
+    if (!error) {
+      await loadTimeSlots();
+    }
   };
 
-  const updateSlotSpots = (slotId: string, maxSpots: number) => {
-    const updatedSlots = timeSlots.map(slot => 
-      slot.id === slotId ? { ...slot, maxSpots } : slot
-    );
-    setTimeSlots(updatedSlots);
-    localStorage.setItem('time-slots', JSON.stringify(updatedSlots));
+  const updateSlotSpots = async (slotId: string, maxSpots: number) => {
+    const { error } = await supabase
+      .from('time_slots')
+      .update({ max_spots: maxSpots })
+      .eq('id', slotId);
+    
+    if (!error) {
+      await loadTimeSlots();
+    }
   };
 
-  const deleteTimeSlot = (slotId: string) => {
-    const updatedSlots = timeSlots.filter(slot => slot.id !== slotId);
-    setTimeSlots(updatedSlots);
-    localStorage.setItem('time-slots', JSON.stringify(updatedSlots));
+  const deleteTimeSlot = async (slotId: string) => {
+    const { error } = await supabase
+      .from('time_slots')
+      .delete()
+      .eq('id', slotId);
+    
+    if (!error) {
+      await loadTimeSlots();
+    }
   };
 
   const updateBookingStatus = (bookingId: string, status: 'confirmed' | 'pending' | 'cancelled') => {

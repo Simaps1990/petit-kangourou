@@ -34,32 +34,6 @@ interface Booking {
   createdAt: string;
 }
 
-// Génération de créneaux d'exemple pour les 30 prochains jours
-const generateTimeSlots = (): TimeSlot[] => {
-  const slots: TimeSlot[] = [];
-  const today = new Date();
-  
-  for (let i = 1; i <= 30; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    
-    // Éviter les dimanches
-    if (date.getDay() !== 0) {
-      const times = ['09:00', '11:00', '14:00', '16:00'];
-      times.forEach(time => {
-        slots.push({
-          id: `${date.toISOString().split('T')[0]}-${time}`,
-          date: date.toISOString().split('T')[0],
-          time: time,
-          available: Math.random() > 0.3 // 70% des créneaux disponibles
-        });
-      });
-    }
-  }
-  
-  return slots;
-};
-
 function BookingPage() {
   const [step, setStep] = useState<'service' | 'slot' | 'details' | 'confirmation' | 'search'>('service');
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -78,9 +52,22 @@ function BookingPage() {
   const [services, setServices] = useState<Service[]>([]);
 
   useEffect(() => {
-    setTimeSlots(generateTimeSlots());
+    loadTimeSlots();
     loadServices();
   }, []);
+
+  const loadTimeSlots = async () => {
+    const { data, error } = await supabase
+      .from('time_slots')
+      .select('*')
+      .eq('available', true)
+      .order('date', { ascending: true })
+      .order('time', { ascending: true });
+    
+    if (data && !error) {
+      setTimeSlots(data);
+    }
+  };
 
   const loadServices = async () => {
     const { data, error } = await supabase
