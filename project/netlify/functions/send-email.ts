@@ -1,7 +1,7 @@
 import { Handler } from '@netlify/functions';
 
 interface EmailRequest {
-  type: 'booking' | 'admin' | 'contact';
+  type: 'booking' | 'admin' | 'contact' | 'custom';
   data: any;
 }
 
@@ -55,6 +55,15 @@ export const handler: Handler = async (event) => {
           to: 'paola.paviot@gmail.com',
           subject: `Contact site web - ${data.subject}`,
           html: generateContactEmail(data),
+        };
+        break;
+
+      case 'custom':
+        emailData = {
+          from: 'Petit Kangourou <onboarding@resend.dev>',
+          to: data.to,
+          subject: data.subject,
+          html: data.html,
         };
         break;
 
