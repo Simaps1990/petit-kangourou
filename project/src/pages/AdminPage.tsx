@@ -475,7 +475,7 @@ function AdminPage() {
                 value={loginData.email}
                 onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                 className="w-full px-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
-                placeholder="paola.paviot@gmail.com"
+                placeholder="Email"
                 required
               />
             </div>
