@@ -1,0 +1,463 @@
+import React, { useState, useEffect } from 'react';
+import { Heart, Star, Users, Clock, ArrowRight, BookOpen } from 'lucide-react';
+
+interface BlogPost {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  image: string;
+  date: string;
+  readTime: string;
+  published: boolean;
+  createdAt: string;
+}
+
+interface Service {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  duration: string;
+  icon: string;
+}
+
+interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  order: number;
+}
+
+// Mapping des icônes
+const iconMap: Record<string, any> = {
+  Heart,
+  Users,
+  Star,
+  Clock
+};
+
+const testimonials = [
+  {
+    name: "Sophie M.",
+    text: "Un accompagnement exceptionnel ! Paola m'a aidée à créer un lien magique avec mon bébé grâce au portage.",
+    rating: 5,
+    location: "Versailles"
+  },
+  {
+    name: "Marie L.",
+    text: "Très professionnelle et à l'écoute. Les conseils sont précieux et adaptés à chaque situation.",
+    rating: 5,
+    location: "Le Chesnay"
+  },
+  {
+    name: "Julie R.",
+    text: "Je recommande vivement ! Mon bébé est plus calme et nous avons gagné en complicité.",
+    rating: 5,
+    location: "Saint-Germain"
+  }
+];
+
+function HomePage() {
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+
+  useEffect(() => {
+    loadBlogPosts();
+    loadServices();
+    loadFaqs();
+    
+    const interval = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadBlogPosts = () => {
+    const savedPosts = localStorage.getItem('blog-posts');
+    if (savedPosts) {
+      const posts = JSON.parse(savedPosts);
+      setBlogPosts(posts.filter((post: BlogPost) => post.published));
+    } else {
+      // Articles par défaut
+      const defaultPosts: BlogPost[] = [
+        {
+          id: '1',
+          title: "Les bienfaits du portage physiologique",
+          excerpt: "Découvrez comment le portage renforce le lien parent-enfant et favorise le développement de bébé.",
+          content: "Le portage physiologique offre de nombreux bienfaits tant pour le bébé que pour le parent. Cette pratique ancestrale favorise le développement harmonieux de l'enfant tout en renforçant le lien d'attachement. Les bébés portés pleurent moins, dorment mieux et développent une meilleure régulation émotionnelle. Pour les parents, le portage facilite les déplacements, libère les mains et permet de répondre rapidement aux besoins de bébé. C'est un moment privilégié de complicité et de tendresse qui contribue au bien-être de toute la famille.",
+          image: "https://images.pexels.com/photos/1257110/pexels-photo-1257110.jpeg?auto=compress&cs=tinysrgb&w=800",
+          date: "15 Mars 2025",
+          readTime: "5 min",
+          published: true,
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: '2',
+          title: "Choisir le bon porte-bébé",
+          excerpt: "Guide complet pour sélectionner l'équipement adapté à votre morphologie et vos besoins.",
+          content: "Le choix d'un porte-bébé adapté est crucial pour le confort et la sécurité de votre enfant. Il existe plusieurs types de porte-bébés : écharpes tissées, écharpes extensibles, slings, mei-tai et préformés. Chacun a ses avantages selon l'âge de bébé, votre morphologie et vos habitudes. L'important est de privilégier un portage physiologique qui respecte la position naturelle de bébé en 'M' et maintient sa colonne vertébrale en forme de C. Je vous accompagne dans ce choix pour trouver le porte-bébé qui vous conviendra parfaitement.",
+          image: "https://images.pexels.com/photos/3662667/pexels-photo-3662667.jpeg?auto=compress&cs=tinysrgb&w=800",
+          date: "10 Mars 2025",
+          readTime: "7 min",
+          published: true,
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: '3',
+          title: "Positions de portage par âge",
+          excerpt: "Apprenez les différentes positions adaptées à chaque étape de développement de votre enfant.",
+          content: "Les positions de portage évoluent avec l'âge et le développement de votre bébé. De la naissance à 4 mois, privilégiez le portage ventral haut, bébé contre votre poitrine. À partir de 4-6 mois, vous pouvez varier avec le portage ventral bas et commencer le portage sur la hanche. Le portage dorsal est possible dès que bébé tient bien sa tête et son dos, généralement vers 6 mois. Chaque position a ses spécificités et ses avantages. Je vous enseigne les bonnes techniques pour chaque étape du développement de votre enfant.",
+          image: "https://images.pexels.com/photos/1912868/pexels-photo-1912868.jpeg?auto=compress&cs=tinysrgb&w=800",
+          date: "5 Mars 2025",
+          readTime: "6 min",
+          published: true,
+          createdAt: new Date().toISOString()
+        }
+      ];
+      setBlogPosts(defaultPosts);
+      localStorage.setItem('blog-posts', JSON.stringify(defaultPosts));
+    }
+  };
+
+  const loadServices = () => {
+    const savedServices = localStorage.getItem('services');
+    if (savedServices) {
+      setServices(JSON.parse(savedServices));
+    } else {
+      // Services par défaut
+      const defaultServices: Service[] = [
+        {
+          id: '1',
+          title: 'Consultation individuelle',
+          description: 'Accompagnement personnalisé à domicile ou en cabinet',
+          price: '60€',
+          duration: '1h30',
+          icon: 'Heart'
+        },
+        {
+          id: '2',
+          title: 'Atelier en duo/trio',
+          description: 'Séance partagée avec d\'autres parents',
+          price: '45€',
+          duration: '1h30',
+          icon: 'Users'
+        },
+        {
+          id: '3',
+          title: 'Formation complète',
+          description: 'Apprentissage approfondi avec suivi personnalisé',
+          price: '120€',
+          duration: '3h',
+          icon: 'Star'
+        },
+        {
+          id: '4',
+          title: 'Suivi à domicile',
+          description: 'Accompagnement dans votre environnement familial',
+          price: '70€',
+          duration: '2h',
+          icon: 'Clock'
+        }
+      ];
+      setServices(defaultServices);
+      localStorage.setItem('services', JSON.stringify(defaultServices));
+    }
+  };
+
+  const loadFaqs = () => {
+    const savedFaqs = localStorage.getItem('faqs');
+    if (savedFaqs) {
+      setFaqs(JSON.parse(savedFaqs));
+    } else {
+      // FAQ par défaut
+      const defaultFaqs: FAQ[] = [
+        {
+          id: '1',
+          question: "À partir de quel âge peut-on porter bébé ?",
+          answer: "Le portage peut commencer dès la naissance avec les bonnes techniques et équipements adaptés.",
+          order: 1
+        },
+        {
+          id: '2',
+          question: "Combien de temps dure une consultation ?",
+          answer: "Une consultation individuelle dure environ 1h30, le temps nécessaire pour bien apprendre.",
+          order: 2
+        },
+        {
+          id: '3',
+          question: "Faut-il acheter un porte-bébé avant la consultation ?",
+          answer: "Non, je vous conseille d'abord sur le choix adapté à votre morphologie et vos besoins.",
+          order: 3
+        },
+        {
+          id: '4',
+          question: "Les consultations ont-elles lieu à domicile ?",
+          answer: "Oui, je me déplace à votre domicile dans un rayon de 20km autour de Versailles.",
+          order: 4
+        },
+        {
+          id: '5',
+          question: "Peut-on faire du portage avec des jumeaux ?",
+          answer: "Absolument ! Il existe des techniques spécifiques que je peux vous enseigner.",
+          order: 5
+        },
+        {
+          id: '6',
+          question: "Jusqu'à quel poids peut-on porter son enfant ?",
+          answer: "Avec les bonnes techniques, on peut porter jusqu'à 20kg environ, selon votre condition physique.",
+          order: 6
+        }
+      ];
+      setFaqs(defaultFaqs);
+      localStorage.setItem('faqs', JSON.stringify(defaultFaqs));
+    }
+  };
+
+  return (
+    <div className="overflow-hidden">
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center bg-[#c27275]">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8 animate-fade-in">
+              <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight">
+                Petit
+                <span className="block text-white">Kangourou</span>
+              </h1>
+              <p className="text-xl text-white/80 leading-relaxed">
+                Monitrice certifiée en portage physiologique à Versailles. 
+                Créez un lien unique avec votre bébé dans le respect de son développement naturel.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button className="px-8 py-4 bg-[#fff1ee] text-[#c27275] rounded-full font-semibold hover:bg-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">
+                  Réserver une consultation
+                </button>
+              </div>
+            </div>
+            <div className="relative animate-float">
+              <div className="w-full h-96 lg:h-[500px] rounded-3xl overflow-hidden shadow-2xl transform rotate-3 hover:rotate-1 transition-transform duration-500">
+                <img 
+                  src="https://images.pexels.com/photos/1257110/pexels-photo-1257110.jpeg?auto=compress&cs=tinysrgb&w=800" 
+                  alt="Portage bébé" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-[#c27275]/20 rounded-full blur-2xl"></div>
+              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-[#c27275]/20 rounded-full blur-2xl"></div>
+              <div className="absolute -top-6 -right-6 w-24 h-24 bg-[#c27275]/10 rounded-full blur-xl"></div>
+            </div>
+          </div>
+        </div>
+        
+      </section>
+
+      {/* Services Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-[#c27275] mb-6">
+              Mes accompagnements
+            </h2>
+            <p className="text-xl text-[#c27275]/70 max-w-3xl mx-auto">
+              Des formules adaptées à vos besoins pour découvrir les joies du portage physiologique
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {services.map((service, index) => {
+              const Icon = iconMap[service.icon] || Heart;
+              return (
+                <div 
+                  key={service.id}
+                  className="group bg-gradient-to-br from-[#fff1ee] to-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="mb-4">
+                    <div className="w-12 h-12 bg-[#c27275] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-[#c27275] mb-2">{service.title}</h3>
+                    <p className="text-[#c27275]/70 mb-4">{service.description}</p>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="text-2xl font-bold text-[#c27275]">{service.price}</div>
+                    <div className="text-sm text-[#c27275]/50">{service.duration}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 bg-gradient-to-r from-[#fff1ee] to-white">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold text-[#c27275] mb-12">
+            Témoignages de parents
+          </h2>
+          
+          <div className="relative h-48 overflow-hidden">
+            {testimonials.map((testimonial, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-all duration-500 ${
+                  index === currentTestimonial ? 'opacity-100 transform translate-y-0' : 'opacity-0 transform translate-y-4'
+                }`}
+              >
+                <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg max-w-2xl mx-auto">
+                  <div className="flex justify-center mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 text-[#c27275] fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-lg text-[#c27275] mb-4 italic">
+                    "{testimonial.text}"
+                  </p>
+                  <div className="text-[#c27275] font-semibold">
+                    {testimonial.name} - {testimonial.location}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex justify-center mt-8 space-x-2">
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentTestimonial(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentTestimonial ? 'bg-[#c27275] scale-125' : 'bg-[#c27275]/30'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Blog Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold text-[#c27275] mb-6">
+              Conseils & Actualités
+            </h2>
+            <p className="text-xl text-[#c27275]/70">
+              Découvrez mes derniers articles sur le portage et la parentalité
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {blogPosts.map((post, index) => (
+              <article 
+                key={post.id}
+                className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 cursor-pointer"
+                style={{ animationDelay: `${index * 0.1}s` }}
+                onClick={() => setSelectedPost(post)}
+              >
+                <div className="h-48 overflow-hidden">
+                  <img 
+                    src={post.image} 
+                    alt={post.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm text-[#c27275] font-medium">{post.date}</span>
+                    <div className="flex items-center text-sm text-[#c27275]/60">
+                      <Clock className="h-4 w-4 mr-1" />
+                      {post.readTime}
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-[#c27275] mb-3 group-hover:text-[#c27275] transition-colors">
+                    {post.title}
+                  </h3>
+                  <p className="text-[#c27275]/70 mb-4">
+                    {post.excerpt}
+                  </p>
+                  <div className="flex items-center text-[#c27275] font-semibold group-hover:gap-2 transition-all duration-300">
+                    Lire la suite
+                    <ArrowRight className="h-4 w-4 ml-1 group-hover:ml-2 transition-all duration-300" />
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          
+          {blogPosts.length === 0 && (
+            <div className="text-center py-12">
+              <BookOpen className="h-16 w-16 text-[#c27275]/30 mx-auto mb-4" />
+              <p className="text-[#c27275]/70">Aucun article publié pour le moment</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-[#c27275] to-[#c27275] text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-4xl lg:text-5xl font-bold mb-6">
+            Prête à commencer votre aventure ?
+          </h2>
+          <p className="text-xl mb-8 opacity-90">
+            Réservez votre première consultation et découvrez les bienfaits du portage physiologique
+          </p>
+          <button className="px-10 py-4 bg-white text-[#c27275] rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-xl">
+            Réserver maintenant
+          </button>
+        </div>
+        
+        {/* Decorative elements */}
+        <div className="absolute -top-24 -left-24 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-24 -right-24 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+      </section>
+      
+      {/* Blog Post Modal */}
+      {selectedPost && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="relative">
+              <button
+                onClick={() => setSelectedPost(null)}
+                className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-[#c27275] hover:text-[#c27275] transition-colors shadow-lg"
+              >
+                ×
+              </button>
+              <div className="h-64 overflow-hidden rounded-t-2xl">
+                <img 
+                  src={selectedPost.image} 
+                  alt={selectedPost.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-[#c27275] font-medium">{selectedPost.date}</span>
+                <div className="flex items-center text-sm text-[#c27275]/60">
+                  <Clock className="h-4 w-4 mr-1" />
+                  {selectedPost.readTime}
+                </div>
+              </div>
+              <h1 className="text-3xl font-bold text-[#c27275] mb-4">{selectedPost.title}</h1>
+              <div className="prose prose-lg max-w-none text-[#c27275]/80 leading-relaxed">
+                {selectedPost.content.split('\n').map((paragraph, index) => (
+                  <p key={index} className="mb-4">{paragraph}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default HomePage;

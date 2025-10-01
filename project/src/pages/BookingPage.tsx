@@ -1,0 +1,558 @@
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, User, Mail, Phone, Baby, Check, Search, Download } from 'lucide-react';
+
+interface TimeSlot {
+  id: string;
+  date: string;
+  time: string;
+  available: boolean;
+}
+
+interface Service {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  duration: string;
+  icon: string;
+}
+
+interface Booking {
+  id: string;
+  serviceId: string;
+  serviceName: string;
+  date: string;
+  time: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  babyAge: string;
+  notes: string;
+  status: 'confirmed' | 'pending';
+  createdAt: string;
+}
+
+// Génération de créneaux d'exemple pour les 30 prochains jours
+const generateTimeSlots = (): TimeSlot[] => {
+  const slots: TimeSlot[] = [];
+  const today = new Date();
+  
+  for (let i = 1; i <= 30; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    
+    // Éviter les dimanches
+    if (date.getDay() !== 0) {
+      const times = ['09:00', '11:00', '14:00', '16:00'];
+      times.forEach(time => {
+        slots.push({
+          id: `${date.toISOString().split('T')[0]}-${time}`,
+          date: date.toISOString().split('T')[0],
+          time: time,
+          available: Math.random() > 0.3 // 70% des créneaux disponibles
+        });
+      });
+    }
+  }
+  
+  return slots;
+};
+
+function BookingPage() {
+  const [step, setStep] = useState<'service' | 'slot' | 'details' | 'confirmation' | 'search'>('service');
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [clientDetails, setClientDetails] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    babyAge: '',
+    notes: ''
+  });
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [searchCode, setSearchCode] = useState('');
+  const [foundBooking, setFoundBooking] = useState<Booking | null>(null);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+
+  useEffect(() => {
+    setTimeSlots(generateTimeSlots());
+    loadServices();
+  }, []);
+
+  const loadServices = () => {
+    const savedServices = localStorage.getItem('services');
+    if (savedServices) {
+      setServices(JSON.parse(savedServices));
+    } else {
+      // Services par défaut si aucun n'est configuré
+      const defaultServices: Service[] = [
+        {
+          id: '1',
+          title: 'Consultation individuelle',
+          description: 'Accompagnement personnalisé à domicile ou en cabinet',
+          price: '60€',
+          duration: '1h30',
+          icon: 'Heart'
+        }
+      ];
+      setServices(defaultServices);
+    }
+  };
+
+  const generateBookingCode = (): string => {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  };
+
+  const handleServiceSelect = (service: Service) => {
+    setSelectedService(service);
+    setStep('slot');
+  };
+
+  const handleSlotSelect = (slot: TimeSlot) => {
+    setSelectedSlot(slot);
+    setStep('details');
+  };
+
+  const handleSubmitBooking = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedService || !selectedSlot) return;
+
+    const bookingId = generateBookingCode();
+    const newBooking: Booking = {
+      id: bookingId,
+      serviceId: selectedService.id,
+      serviceName: selectedService.title,
+      date: selectedSlot.date,
+      time: selectedSlot.time,
+      clientName: clientDetails.name,
+      clientEmail: clientDetails.email,
+      clientPhone: clientDetails.phone,
+      babyAge: clientDetails.babyAge,
+      notes: clientDetails.notes,
+      status: 'confirmed',
+      createdAt: new Date().toISOString()
+    };
+
+    // Simuler la sauvegarde
+    localStorage.setItem(`booking-${bookingId}`, JSON.stringify(newBooking));
+    
+    setBooking(newBooking);
+    setStep('confirmation');
+
+    // Simuler l'envoi d'email
+    console.log('Email de confirmation envoyé à:', clientDetails.email);
+  };
+
+  const handleSearchBooking = () => {
+    const savedBooking = localStorage.getItem(`booking-${searchCode}`);
+    if (savedBooking) {
+      setFoundBooking(JSON.parse(savedBooking));
+    } else {
+      setFoundBooking(null);
+      alert('Aucune réservation trouvée avec ce code');
+    }
+  };
+
+  const generateCalendarEvent = (booking: Booking) => {
+    const startDate = new Date(`${booking.date}T${booking.time}`);
+    const endDate = new Date(startDate.getTime() + 90 * 60000); // +1h30
+    
+    const event = {
+      title: `Consultation Portage - ${booking.serviceName}`,
+      start: startDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z',
+      end: endDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z',
+      description: `Rendez-vous avec Paola - Portage Douceur\\nService: ${booking.serviceName}\\nClient: ${booking.clientName}`,
+      location: 'Versailles, France'
+    };
+
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Portage Douceur//Booking//FR
+BEGIN:VEVENT
+UID:${booking.id}@portagedouceur.fr
+DTSTART:${event.start}
+DTEND:${event.end}
+SUMMARY:${event.title}
+DESCRIPTION:${event.description}
+LOCATION:${event.location}
+END:VEVENT
+END:VCALENDAR`;
+
+    const blob = new Blob([icsContent], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rdv-portage-${booking.id}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const groupSlotsByDate = (slots: TimeSlot[]) => {
+    return slots.reduce((groups, slot) => {
+      const date = slot.date;
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(slot);
+      return groups;
+    }, {} as Record<string, TimeSlot[]>);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#fff1ee] to-white py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-[#c27275] mb-4">Réservation</h1>
+          <p className="text-[#c27275]/70">Planifiez votre consultation de portage physiologique</p>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="flex justify-center mb-8">
+          <div className="flex bg-white rounded-full p-1 shadow-lg">
+            <button
+              onClick={() => setStep('service')}
+              className={`px-6 py-2 rounded-full transition-all duration-300 ${
+                step !== 'search' ? 'bg-[#c27275] text-white' : 'text-[#c27275] hover:bg-[#fff1ee]'
+              }`}
+            >
+              Nouvelle réservation
+            </button>
+            <button
+              onClick={() => setStep('search')}
+              className={`px-6 py-2 rounded-full transition-all duration-300 ${
+                step === 'search' ? 'bg-[#c27275] text-white' : 'text-[#c27275] hover:bg-[#fff1ee]'
+              }`}
+            >
+              Retrouver ma réservation
+            </button>
+          </div>
+        </div>
+
+        {/* Search Booking */}
+        {step === 'search' && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md mx-auto">
+            <div className="text-center mb-6">
+              <Search className="h-16 w-16 text-[#c27275] mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-[#c27275] mb-2">Retrouver ma réservation</h2>
+              <p className="text-[#c27275]/70">Saisissez votre code de réservation</p>
+            </div>
+            
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="Code de réservation (ex: ABC123)"
+                value={searchCode}
+                onChange={(e) => setSearchCode(e.target.value.toUpperCase())}
+                className="w-full p-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+              />
+              <button
+                onClick={handleSearchBooking}
+                className="w-full bg-[#c27275] text-white py-3 rounded-lg font-semibold hover:bg-[#c27275] transition-colors"
+              >
+                Rechercher
+              </button>
+            </div>
+
+            {foundBooking && (
+              <div className="mt-6 p-4 bg-[#fff1ee] rounded-lg">
+                <h3 className="font-semibold text-[#c27275] mb-2">Réservation trouvée</h3>
+                <div className="space-y-2 text-sm text-[#c27275]/80">
+                  <p><strong>Service:</strong> {foundBooking.serviceName}</p>
+                  <p><strong>Date:</strong> {formatDate(foundBooking.date)}</p>
+                  <p><strong>Heure:</strong> {foundBooking.time}</p>
+                  <p><strong>Client:</strong> {foundBooking.clientName}</p>
+                  <p><strong>Email:</strong> {foundBooking.clientEmail}</p>
+                  <p><strong>Statut:</strong> 
+                    <span className="text-green-600 font-semibold ml-1">
+                      {foundBooking.status === 'confirmed' ? 'Confirmé' : 'En attente'}
+                    </span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => generateCalendarEvent(foundBooking)}
+                  className="mt-4 flex items-center justify-center w-full bg-[#c27275] text-white py-2 rounded-lg hover:bg-[#c27275] transition-colors"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Ajouter au calendrier
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 1: Service Selection */}
+        {step === 'service' && (
+          <div>
+            {services.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {services.map((service) => (
+                  <div
+                    key={service.id}
+                    onClick={() => handleServiceSelect(service)}
+                    className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl cursor-pointer transform hover:-translate-y-2 transition-all duration-300 border border-transparent hover:border-[#c27275]/20"
+                  >
+                    <h3 className="text-xl font-bold text-[#c27275] mb-2">{service.title}</h3>
+                    <p className="text-[#c27275]/70 mb-4">{service.description}</p>
+                    <div className="flex justify-between items-center">
+                      <div className="text-2xl font-bold text-[#c27275]">{service.price}</div>
+                      <div className="text-sm text-[#c27275]/50">{service.duration}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+                <Calendar className="h-16 w-16 text-[#c27275]/30 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-[#c27275] mb-2">Aucun service disponible</h3>
+                <p className="text-[#c27275]/70">
+                  Les offres d'accompagnement ne sont pas encore configurées. 
+                  Contactez-nous directement pour plus d'informations.
+                </p>
+                <button 
+                  onClick={() => window.location.href = '/contact'}
+                  className="mt-4 px-6 py-3 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275] transition-colors"
+                >
+                  Nous contacter
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 2: Time Slot Selection */}
+        {step === 'slot' && selectedService && (
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-[#c27275] mb-2">Choisissez votre créneau</h2>
+              <p className="text-[#c27275]/70">Service sélectionné: {selectedService.title}</p>
+            </div>
+
+            <div className="space-y-6">
+              {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available))).map(([date, slots]) => (
+                <div key={date} className="border-b border-[#fff1ee] pb-4">
+                  <h3 className="font-semibold text-[#c27275] mb-3 capitalize">
+                    {formatDate(date)}
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {slots.map((slot) => (
+                      <button
+                        key={slot.id}
+                        onClick={() => handleSlotSelect(slot)}
+                        className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium"
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Time Slot Selection */}
+        {step === 'slot' && selectedService && (
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-[#c27275] mb-2">Choisissez votre créneau</h2>
+              <p className="text-[#c27275]/70">Service sélectionné: {selectedService.title}</p>
+            </div>
+
+            <div className="space-y-6">
+              {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available))).map(([date, slots]) => (
+                <div key={date} className="border-b border-[#fff1ee] pb-4">
+                  <h3 className="font-semibold text-[#c27275] mb-3 capitalize">
+                    {formatDate(date)}
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {slots.map((slot) => (
+                      <button
+                        key={slot.id}
+                        onClick={() => handleSlotSelect(slot)}
+                        className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium"
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Client Details */}
+        {step === 'details' && selectedService && selectedSlot && (
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-[#c27275] mb-2">Vos informations</h2>
+              <div className="bg-[#fff1ee] p-4 rounded-lg">
+                <p><strong>Service:</strong> {selectedService.title}</p>
+                <p><strong>Date:</strong> {formatDate(selectedSlot.date)}</p>
+                <p><strong>Heure:</strong> {selectedSlot.time}</p>
+                <p><strong>Prix:</strong> {selectedService.price}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmitBooking} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[#c27275] font-medium mb-2">Nom complet *</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-5 w-5 text-[#c27275]/50" />
+                    <input
+                      type="text"
+                      required
+                      value={clientDetails.name}
+                      onChange={(e) => setClientDetails({...clientDetails, name: e.target.value})}
+                      className="w-full pl-10 pr-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      placeholder="Votre nom"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[#c27275] font-medium mb-2">Email *</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-5 w-5 text-[#c27275]/50" />
+                    <input
+                      type="email"
+                      required
+                      value={clientDetails.email}
+                      onChange={(e) => setClientDetails({...clientDetails, email: e.target.value})}
+                      className="w-full pl-10 pr-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      placeholder="votre@email.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[#c27275] font-medium mb-2">Téléphone *</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 h-5 w-5 text-[#c27275]/50" />
+                    <input
+                      type="tel"
+                      required
+                      value={clientDetails.phone}
+                      onChange={(e) => setClientDetails({...clientDetails, phone: e.target.value})}
+                      className="w-full pl-10 pr-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      placeholder="06 XX XX XX XX"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[#c27275] font-medium mb-2">Âge de bébé</label>
+                  <div className="relative">
+                    <Baby className="absolute left-3 top-3 h-5 w-5 text-[#c27275]/50" />
+                    <input
+                      type="text"
+                      value={clientDetails.babyAge}
+                      onChange={(e) => setClientDetails({...clientDetails, babyAge: e.target.value})}
+                      className="w-full pl-10 pr-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      placeholder="ex: 3 mois"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#c27275] font-medium mb-2">Notes ou demandes particulières</label>
+                <textarea
+                  value={clientDetails.notes}
+                  onChange={(e) => setClientDetails({...clientDetails, notes: e.target.value})}
+                  className="w-full p-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent h-24 resize-none"
+                  placeholder="Dites-nous en plus sur vos besoins..."
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setStep('slot')}
+                  className="flex-1 py-3 bg-gray-200 text-[#c27275] rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  Retour
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3 bg-[#c27275] text-white rounded-lg font-semibold hover:bg-[#c27275] transition-colors"
+                >
+                  Confirmer la réservation
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* Step 4: Confirmation */}
+        {step === 'confirmation' && booking && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="h-8 w-8 text-green-600" />
+              </div>
+              <h2 className="text-3xl font-bold text-[#c27275] mb-2">Réservation confirmée !</h2>
+              <p className="text-[#c27275]/70">Votre consultation a été enregistrée avec succès</p>
+            </div>
+
+            <div className="bg-[#fff1ee] p-6 rounded-lg mb-6">
+              <div className="text-2xl font-bold text-[#c27275] mb-4">
+                Code de réservation: {booking.id}
+              </div>
+              <div className="space-y-2 text-[#c27275]">
+                <p><strong>Service:</strong> {booking.serviceName}</p>
+                <p><strong>Date:</strong> {formatDate(booking.date)}</p>
+                <p><strong>Heure:</strong> {booking.time}</p>
+                <p><strong>Prix:</strong> {selectedService?.price}</p>
+                <p><strong>Client:</strong> {booking.clientName}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-[#c27275]/70">
+                Un email de confirmation a été envoyé à {booking.clientEmail}
+              </p>
+              
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={() => generateCalendarEvent(booking)}
+                  className="flex items-center px-6 py-3 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275] transition-colors"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Ajouter au calendrier
+                </button>
+                <button
+                  onClick={() => {
+                    setStep('service');
+                    setSelectedService(null);
+                    setSelectedSlot(null);
+                    setClientDetails({name: '', email: '', phone: '', babyAge: '', notes: ''});
+                    setBooking(null);
+                  }}
+                  className="px-6 py-3 bg-gray-200 text-[#c27275] rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Nouvelle réservation
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default BookingPage;
