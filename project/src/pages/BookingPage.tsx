@@ -400,37 +400,6 @@ END:VCALENDAR`;
           </div>
         )}
 
-        {/* Step 2: Time Slot Selection */}
-        {step === 'slot' && selectedService && (
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-[#c27275] mb-2">Choisissez votre créneau</h2>
-              <p className="text-[#c27275]/70">Service sélectionné: {selectedService.title}</p>
-            </div>
-
-            <div className="space-y-6">
-              {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available))).map(([date, slots]) => (
-                <div key={date} className="border-b border-[#fff1ee] pb-4">
-                  <h3 className="font-semibold text-[#c27275] mb-3 capitalize">
-                    {formatDate(date)}
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {slots.map((slot) => (
-                      <button
-                        key={slot.id}
-                        onClick={() => handleSlotSelect(slot)}
-                        className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium"
-                      >
-                        {slot.time}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Step 3: Client Details */}
         {step === 'details' && selectedService && selectedSlot && (
           <div className="bg-white rounded-2xl shadow-lg p-8">
