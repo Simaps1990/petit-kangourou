@@ -184,41 +184,42 @@ export const emailService = {
   // Fonction générique d'envoi d'email via API
   async sendEmail(data: EmailData): Promise<{ success: boolean; error?: string }> {
     try {
-      // Pour l'instant, on simule l'envoi
-      // En production, vous devrez utiliser un service comme Resend, SendGrid, etc.
+      // Si la clé API Resend est configurée, on envoie vraiment l'email
+      const resendApiKey = import.meta.env.VITE_RESEND_API_KEY;
       
-      // Exemple avec Resend (à décommenter quand vous aurez la clé API) :
-      /*
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: 'Petit Kangourou <noreply@portagedouceur.fr>',
+      if (resendApiKey && resendApiKey !== 'your_resend_api_key') {
+        // Envoi réel avec Resend
+        const response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey}`,
+          },
+          body: JSON.stringify({
+            from: 'Petit Kangourou <onboarding@resend.dev>', // Changez ceci quand vous aurez un domaine vérifié
+            to: data.to,
+            subject: data.subject,
+            html: data.html,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erreur lors de l\'envoi de l\'email');
+        }
+
+        console.log('✅ Email envoyé avec succès à:', data.to);
+        return { success: true };
+      } else {
+        // Mode simulation (développement)
+        console.log('📧 Email simulé (pas de clé API Resend) :', {
           to: data.to,
           subject: data.subject,
-          html: data.html,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de l\'envoi de l\'email');
+        });
+        return { success: true };
       }
-
-      return { success: true };
-      */
-
-      // Simulation pour le développement
-      console.log('📧 Email envoyé (simulation) :', {
-        to: data.to,
-        subject: data.subject,
-      });
-
-      return { success: true };
     } catch (error) {
-      console.error('Erreur envoi email:', error);
+      console.error('❌ Erreur envoi email:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Erreur inconnue' 
