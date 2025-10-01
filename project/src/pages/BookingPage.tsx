@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, User, Mail, Phone, Baby, Check, Search, Download } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { emailService } from '../lib/email';
 
 interface TimeSlot {
   id: string;
@@ -80,23 +82,14 @@ function BookingPage() {
     loadServices();
   }, []);
 
-  const loadServices = () => {
-    const savedServices = localStorage.getItem('services');
-    if (savedServices) {
-      setServices(JSON.parse(savedServices));
-    } else {
-      // Services par défaut si aucun n'est configuré
-      const defaultServices: Service[] = [
-        {
-          id: '1',
-          title: 'Consultation individuelle',
-          description: 'Accompagnement personnalisé à domicile ou en cabinet',
-          price: '60€',
-          duration: '1h30',
-          icon: 'Heart'
-        }
-      ];
-      setServices(defaultServices);
+  const loadServices = async () => {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('id', { ascending: true });
+    
+    if (data && !error) {
+      setServices(data);
     }
   };
 
@@ -135,20 +128,78 @@ function BookingPage() {
       createdAt: new Date().toISOString()
     };
 
-    // Simuler la sauvegarde
-    localStorage.setItem(`booking-${bookingId}`, JSON.stringify(newBooking));
+    // Sauvegarder dans Supabase
+    const { error: insertError } = await supabase
+      .from('bookings')
+      .insert([{
+        id: bookingId,
+        service_id: selectedService.id,
+        service_name: selectedService.title,
+        date: selectedSlot.date,
+        time: selectedSlot.time,
+        client_name: clientDetails.name,
+        client_email: clientDetails.email,
+        client_phone: clientDetails.phone,
+        baby_age: clientDetails.babyAge,
+        notes: clientDetails.notes,
+        status: 'confirmed',
+        spots_reserved: 1
+      }]);
+
+    if (insertError) {
+      console.error('Erreur sauvegarde réservation:', insertError);
+      alert('Erreur lors de la réservation. Veuillez réessayer.');
+      return;
+    }
     
     setBooking(newBooking);
     setStep('confirmation');
 
-    // Simuler l'envoi d'email
-    console.log('Email de confirmation envoyé à:', clientDetails.email);
+    // Envoyer les emails de confirmation
+    await emailService.sendBookingConfirmation({
+      clientName: clientDetails.name,
+      clientEmail: clientDetails.email,
+      serviceName: selectedService.title,
+      date: formatDate(selectedSlot.date),
+      time: selectedSlot.time,
+      bookingCode: bookingId,
+      price: selectedService.price
+    });
+
+    await emailService.sendAdminNotification({
+      clientName: clientDetails.name,
+      clientEmail: clientDetails.email,
+      serviceName: selectedService.title,
+      date: formatDate(selectedSlot.date),
+      time: selectedSlot.time,
+      bookingCode: bookingId,
+      price: selectedService.price
+    });
   };
 
-  const handleSearchBooking = () => {
-    const savedBooking = localStorage.getItem(`booking-${searchCode}`);
-    if (savedBooking) {
-      setFoundBooking(JSON.parse(savedBooking));
+  const handleSearchBooking = async () => {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', searchCode)
+      .single();
+    
+    if (data && !error) {
+      // Mapper les noms de colonnes
+      setFoundBooking({
+        id: data.id,
+        serviceId: data.service_id,
+        serviceName: data.service_name,
+        date: data.date,
+        time: data.time,
+        clientName: data.client_name,
+        clientEmail: data.client_email,
+        clientPhone: data.client_phone,
+        babyAge: data.baby_age,
+        notes: data.notes,
+        status: data.status,
+        createdAt: data.created_at
+      });
     } else {
       setFoundBooking(null);
       alert('Aucune réservation trouvée avec ce code');

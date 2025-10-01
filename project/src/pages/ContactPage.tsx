@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, MessageCircle, Baby } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { emailService } from '../lib/email';
 
 interface FAQ {
   id: string;
@@ -24,11 +26,14 @@ function ContactPage() {
     loadFaqs();
   }, []);
 
-  const loadFaqs = () => {
-    const savedFaqs = localStorage.getItem('faqs');
-    if (savedFaqs) {
-      const allFaqs = JSON.parse(savedFaqs);
-      setFaqs(allFaqs.sort((a: FAQ, b: FAQ) => a.order - b.order));
+  const loadFaqs = async () => {
+    const { data, error } = await supabase
+      .from('faqs')
+      .select('*')
+      .order('order', { ascending: true });
+    
+    if (data && !error) {
+      setFaqs(data);
     }
   };
 
@@ -36,15 +41,26 @@ function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simuler l'envoi du formulaire
-    setTimeout(() => {
-      setIsSubmitting(false);
+    // Envoyer l'email de contact
+    const result = await emailService.sendContactEmail({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      subject: formData.subject,
+      message: formData.message
+    });
+    
+    setIsSubmitting(false);
+    
+    if (result.success) {
       setIsSubmitted(true);
       setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
       
       // Réinitialiser le message de confirmation après 3 secondes
       setTimeout(() => setIsSubmitted(false), 3000);
-    }, 1000);
+    } else {
+      alert('Erreur lors de l\'envoi du message. Veuillez réessayer.');
+    }
   };
 
   const contactInfo = [

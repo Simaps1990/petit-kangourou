@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Star, Users, Clock, ArrowRight, BookOpen } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 interface BlogPost {
   id: string;
@@ -76,144 +77,49 @@ function HomePage() {
     return () => clearInterval(interval);
   }, []);
 
-  const loadBlogPosts = () => {
-    const savedPosts = localStorage.getItem('blog-posts');
-    if (savedPosts) {
-      const posts = JSON.parse(savedPosts);
-      setBlogPosts(posts.filter((post: BlogPost) => post.published));
-    } else {
-      // Articles par défaut
-      const defaultPosts: BlogPost[] = [
-        {
-          id: '1',
-          title: "Les bienfaits du portage physiologique",
-          excerpt: "Découvrez comment le portage renforce le lien parent-enfant et favorise le développement de bébé.",
-          content: "Le portage physiologique offre de nombreux bienfaits tant pour le bébé que pour le parent. Cette pratique ancestrale favorise le développement harmonieux de l'enfant tout en renforçant le lien d'attachement. Les bébés portés pleurent moins, dorment mieux et développent une meilleure régulation émotionnelle. Pour les parents, le portage facilite les déplacements, libère les mains et permet de répondre rapidement aux besoins de bébé. C'est un moment privilégié de complicité et de tendresse qui contribue au bien-être de toute la famille.",
-          image: "https://images.pexels.com/photos/1257110/pexels-photo-1257110.jpeg?auto=compress&cs=tinysrgb&w=800",
-          date: "15 Mars 2025",
-          readTime: "5 min",
-          published: true,
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: '2',
-          title: "Choisir le bon porte-bébé",
-          excerpt: "Guide complet pour sélectionner l'équipement adapté à votre morphologie et vos besoins.",
-          content: "Le choix d'un porte-bébé adapté est crucial pour le confort et la sécurité de votre enfant. Il existe plusieurs types de porte-bébés : écharpes tissées, écharpes extensibles, slings, mei-tai et préformés. Chacun a ses avantages selon l'âge de bébé, votre morphologie et vos habitudes. L'important est de privilégier un portage physiologique qui respecte la position naturelle de bébé en 'M' et maintient sa colonne vertébrale en forme de C. Je vous accompagne dans ce choix pour trouver le porte-bébé qui vous conviendra parfaitement.",
-          image: "https://images.pexels.com/photos/3662667/pexels-photo-3662667.jpeg?auto=compress&cs=tinysrgb&w=800",
-          date: "10 Mars 2025",
-          readTime: "7 min",
-          published: true,
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: '3',
-          title: "Positions de portage par âge",
-          excerpt: "Apprenez les différentes positions adaptées à chaque étape de développement de votre enfant.",
-          content: "Les positions de portage évoluent avec l'âge et le développement de votre bébé. De la naissance à 4 mois, privilégiez le portage ventral haut, bébé contre votre poitrine. À partir de 4-6 mois, vous pouvez varier avec le portage ventral bas et commencer le portage sur la hanche. Le portage dorsal est possible dès que bébé tient bien sa tête et son dos, généralement vers 6 mois. Chaque position a ses spécificités et ses avantages. Je vous enseigne les bonnes techniques pour chaque étape du développement de votre enfant.",
-          image: "https://images.pexels.com/photos/1912868/pexels-photo-1912868.jpeg?auto=compress&cs=tinysrgb&w=800",
-          date: "5 Mars 2025",
-          readTime: "6 min",
-          published: true,
-          createdAt: new Date().toISOString()
-        }
-      ];
-      setBlogPosts(defaultPosts);
-      localStorage.setItem('blog-posts', JSON.stringify(defaultPosts));
+  const loadBlogPosts = async () => {
+    const { data, error } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('published', true)
+      .order('created_at', { ascending: false });
+    
+    if (data && !error) {
+      // Mapper les noms de colonnes de Supabase vers l'interface TypeScript
+      const posts = data.map(post => ({
+        id: post.id,
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        image: post.image,
+        date: post.date,
+        readTime: post.read_time,
+        published: post.published,
+        createdAt: post.created_at
+      }));
+      setBlogPosts(posts);
     }
   };
 
-  const loadServices = () => {
-    const savedServices = localStorage.getItem('services');
-    if (savedServices) {
-      setServices(JSON.parse(savedServices));
-    } else {
-      // Services par défaut
-      const defaultServices: Service[] = [
-        {
-          id: '1',
-          title: 'Consultation individuelle',
-          description: 'Accompagnement personnalisé à domicile ou en cabinet',
-          price: '60€',
-          duration: '1h30',
-          icon: 'Heart'
-        },
-        {
-          id: '2',
-          title: 'Atelier en duo/trio',
-          description: 'Séance partagée avec d\'autres parents',
-          price: '45€',
-          duration: '1h30',
-          icon: 'Users'
-        },
-        {
-          id: '3',
-          title: 'Formation complète',
-          description: 'Apprentissage approfondi avec suivi personnalisé',
-          price: '120€',
-          duration: '3h',
-          icon: 'Star'
-        },
-        {
-          id: '4',
-          title: 'Suivi à domicile',
-          description: 'Accompagnement dans votre environnement familial',
-          price: '70€',
-          duration: '2h',
-          icon: 'Clock'
-        }
-      ];
-      setServices(defaultServices);
-      localStorage.setItem('services', JSON.stringify(defaultServices));
+  const loadServices = async () => {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('id', { ascending: true });
+    
+    if (data && !error) {
+      setServices(data);
     }
   };
 
-  const loadFaqs = () => {
-    const savedFaqs = localStorage.getItem('faqs');
-    if (savedFaqs) {
-      setFaqs(JSON.parse(savedFaqs));
-    } else {
-      // FAQ par défaut
-      const defaultFaqs: FAQ[] = [
-        {
-          id: '1',
-          question: "À partir de quel âge peut-on porter bébé ?",
-          answer: "Le portage peut commencer dès la naissance avec les bonnes techniques et équipements adaptés.",
-          order: 1
-        },
-        {
-          id: '2',
-          question: "Combien de temps dure une consultation ?",
-          answer: "Une consultation individuelle dure environ 1h30, le temps nécessaire pour bien apprendre.",
-          order: 2
-        },
-        {
-          id: '3',
-          question: "Faut-il acheter un porte-bébé avant la consultation ?",
-          answer: "Non, je vous conseille d'abord sur le choix adapté à votre morphologie et vos besoins.",
-          order: 3
-        },
-        {
-          id: '4',
-          question: "Les consultations ont-elles lieu à domicile ?",
-          answer: "Oui, je me déplace à votre domicile dans un rayon de 20km autour de Versailles.",
-          order: 4
-        },
-        {
-          id: '5',
-          question: "Peut-on faire du portage avec des jumeaux ?",
-          answer: "Absolument ! Il existe des techniques spécifiques que je peux vous enseigner.",
-          order: 5
-        },
-        {
-          id: '6',
-          question: "Jusqu'à quel poids peut-on porter son enfant ?",
-          answer: "Avec les bonnes techniques, on peut porter jusqu'à 20kg environ, selon votre condition physique.",
-          order: 6
-        }
-      ];
-      setFaqs(defaultFaqs);
-      localStorage.setItem('faqs', JSON.stringify(defaultFaqs));
+  const loadFaqs = async () => {
+    const { data, error } = await supabase
+      .from('faqs')
+      .select('*')
+      .order('order', { ascending: true });
+    
+    if (data && !error) {
+      setFaqs(data);
     }
   };
 
