@@ -101,13 +101,16 @@ function BookingPage() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
-  const handleServiceSelect = (service: Service) => {
+  const handleServiceSelect = async (service: Service) => {
     setSelectedService(service);
     setStep('slot');
+    // Recharger les créneaux pour avoir les données à jour
+    await loadTimeSlots();
   };
 
   const handleSlotSelect = (slot: TimeSlot) => {
     setSelectedSlot(slot);
+    setSpotsRequested(1); // Réinitialiser à 1 place
     setStep('details');
   };
 
@@ -167,6 +170,9 @@ function BookingPage() {
     if (updateError) {
       console.error('Erreur mise à jour créneau:', updateError);
     }
+    
+    // Recharger les créneaux pour mettre à jour l'affichage
+    await loadTimeSlots();
     
     setBooking(newBooking);
     setStep('confirmation');

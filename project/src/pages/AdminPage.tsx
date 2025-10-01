@@ -471,6 +471,7 @@ function AdminPage() {
                 onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                 className="w-full px-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
                 placeholder="Email"
+                autoComplete="username"
                 required
               />
             </div>
