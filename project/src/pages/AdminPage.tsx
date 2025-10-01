@@ -101,6 +101,7 @@ function AdminPage() {
   const [showPostForm, setShowPostForm] = useState(false);
   const [showServiceForm, setShowServiceForm] = useState(false);
   const [showFaqForm, setShowFaqForm] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; bookingId: string; clientName: string }>({ show: false, bookingId: '', clientName: '' });
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -333,19 +334,6 @@ function AdminPage() {
     
     if (!error) {
       await loadTimeSlots();
-    }
-  };
-
-  const updateBookingStatus = (bookingId: string, status: 'confirmed' | 'pending' | 'cancelled') => {
-    const updatedBookings = bookings.map(booking => 
-      booking.id === bookingId ? { ...booking, status } : booking
-    );
-    setBookings(updatedBookings);
-    
-    // Mettre à jour dans localStorage
-    const booking = updatedBookings.find(b => b.id === bookingId);
-    if (booking) {
-      localStorage.setItem(`booking-${bookingId}`, JSON.stringify(booking));
     }
   };
 
@@ -623,7 +611,6 @@ function AdminPage() {
                       <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Client</th>
                       <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Service</th>
                       <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Date</th>
-                      <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Statut</th>
                       <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Actions</th>
                     </tr>
                   </thead>
@@ -645,29 +632,13 @@ function AdminPage() {
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <select
-                            value={booking.status}
-                            onChange={(e) => updateBookingStatus(booking.id, e.target.value as any)}
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}
+                          <button 
+                            onClick={() => setDeleteConfirm({ show: true, bookingId: booking.id, clientName: booking.clientName })}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Supprimer la réservation"
                           >
-                            <option value="confirmed">Confirmé</option>
-                            <option value="pending">En attente</option>
-                            <option value="cancelled">Annulé</option>
-                          </select>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex gap-2">
-                            <button className="p-1 text-[#c27275] hover:bg-[#fff1ee] rounded">
-                              <Eye className="h-4 w-4" />
-                            </button>
-                            <button className="p-1 text-[#c27275] hover:bg-[#fff1ee] rounded">
-                              <Edit className="h-4 w-4" />
-                            </button>
-                          </div>
+                            <Trash2 className="h-5 w-5" />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -1517,6 +1488,55 @@ function AdminPage() {
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Popup de confirmation de suppression */}
+        {deleteConfirm.show && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in">
+              <div className="text-center mb-6">
+                <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                  <AlertCircle className="h-8 w-8 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Supprimer la réservation ?
+                </h3>
+                <p className="text-gray-600">
+                  Êtes-vous sûr de vouloir supprimer la réservation de <strong>{deleteConfirm.clientName}</strong> ?
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Cette action est irréversible.
+                </p>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirm({ show: false, bookingId: '', clientName: '' })}
+                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={async () => {
+                    const { error } = await supabase
+                      .from('bookings')
+                      .delete()
+                      .eq('id', deleteConfirm.bookingId);
+                    
+                    if (!error) {
+                      await loadBookings();
+                      setDeleteConfirm({ show: false, bookingId: '', clientName: '' });
+                    } else {
+                      alert('Erreur lors de la suppression');
+                    }
+                  }}
+                  className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
+                >
+                  Supprimer
+                </button>
               </div>
             </div>
           </div>
