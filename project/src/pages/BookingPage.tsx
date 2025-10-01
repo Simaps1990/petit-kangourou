@@ -45,7 +45,8 @@ function BookingPage() {
     email: '',
     phone: '',
     babyAge: '',
-    notes: ''
+    notes: '',
+    spotsRequested: 1
   });
   const [booking, setBooking] = useState<Booking | null>(null);
   const [searchCode, setSearchCode] = useState('');
@@ -68,14 +69,17 @@ function BookingPage() {
     
     if (data && !error) {
       // Mapper les noms de colonnes snake_case vers camelCase
-      const slots = data.map(slot => ({
-        id: slot.id,
-        date: slot.date,
-        time: slot.time,
-        available: slot.available,
-        max_spots: slot.max_spots || 1,
-        booked_spots: slot.booked_spots || 0
-      }));
+      // Filtrer uniquement les créneaux qui ont encore des places
+      const slots = data
+        .map(slot => ({
+          id: slot.id,
+          date: slot.date,
+          time: slot.time,
+          available: slot.available,
+          max_spots: slot.max_spots || 1,
+          booked_spots: slot.booked_spots || 0
+        }))
+        .filter(slot => (slot.max_spots - slot.booked_spots) > 0); // Masquer si complet
       setTimeSlots(slots);
     }
   };
@@ -141,8 +145,15 @@ function BookingPage() {
         baby_age: clientDetails.babyAge,
         notes: clientDetails.notes,
         status: 'confirmed',
-        spots_reserved: 1
+        spots_reserved: clientDetails.spotsRequested
       }]);
+
+    // Mettre à jour le nombre de places réservées dans time_slots
+    const newBookedSpots = (selectedSlot.booked_spots || 0) + clientDetails.spotsRequested;
+    const { error: updateError } = await supabase
+      .from('time_slots')
+      .update({ booked_spots: newBookedSpots })
+      .eq('id', selectedSlot.id);
 
     if (insertError) {
       console.error('Erreur sauvegarde réservation:', insertError);
@@ -490,6 +501,22 @@ END:VCALENDAR`;
                     />
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-[#c27275] font-medium mb-2">Nombre de places</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max={selectedSlot ? (selectedSlot.max_spots || 1) - (selectedSlot.booked_spots || 0) : 1}
+                    value={clientDetails.spotsRequested}
+                    onChange={(e) => setClientDetails({...clientDetails, spotsRequested: parseInt(e.target.value) || 1})}
+                    className="w-full p-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                    required
+                  />
+                  <p className="text-sm text-[#c27275]/70 mt-1">
+                    Places disponibles : {selectedSlot ? (selectedSlot.max_spots || 1) - (selectedSlot.booked_spots || 0) : 0}
+                  </p>
+                </div>
               </div>
 
               <div>
@@ -563,7 +590,7 @@ END:VCALENDAR`;
                     setStep('service');
                     setSelectedService(null);
                     setSelectedSlot(null);
-                    setClientDetails({name: '', email: '', phone: '', babyAge: '', notes: ''});
+                    setClientDetails({name: '', email: '', phone: '', babyAge: '', notes: '', spotsRequested: 1});
                     setBooking(null);
                   }}
                   className="px-6 py-3 bg-gray-200 text-[#c27275] rounded-lg hover:bg-gray-300 transition-colors"
