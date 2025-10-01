@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Eye, EyeOff, Users, Calendar, Plus, Trash2, CreditCard as Edit, Clock, Mail, Phone, BookOpen, Package, HelpCircle, Save, X, Settings, Star, Heart, CheckCircle, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Calendar, Plus, Trash2, CreditCard as Edit, Clock, BookOpen, Package, HelpCircle, Save, X, Settings, CheckCircle, AlertCircle } from 'lucide-react';
 import { authService } from '../lib/auth';
 import { supabase } from '../lib/supabase';
-import { emailService } from '../lib/email';
 
 interface Booking {
   id: string;
@@ -422,6 +421,14 @@ function AdminPage() {
     localStorage.setItem('faqs', JSON.stringify(updatedFaqs));
     setEditingFaq(null);
     setShowFaqForm(false);
+  };
+
+  const updateFaq = (faqId: string, field: 'question' | 'answer', value: string) => {
+    const updatedFaqs = faqs.map(f => 
+      f.id === faqId ? { ...f, [field]: value } : f
+    );
+    setFaqs(updatedFaqs);
+    localStorage.setItem('faqs', JSON.stringify(updatedFaqs));
   };
 
   const deleteFaq = (faqId: string) => {
