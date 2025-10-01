@@ -1521,16 +1521,37 @@ function AdminPage() {
                 </button>
                 <button
                   onClick={async () => {
-                    const { error } = await supabase
-                      .from('bookings')
-                      .delete()
-                      .eq('id', deleteConfirm.bookingId);
+                    // Récupérer la réservation pour connaître le créneau et le nombre de places
+                    const booking = bookings.find(b => b.id === deleteConfirm.bookingId);
                     
-                    if (!error) {
-                      await loadBookings();
-                      setDeleteConfirm({ show: false, bookingId: '', clientName: '' });
-                    } else {
-                      alert('Erreur lors de la suppression');
+                    if (booking) {
+                      // Supprimer la réservation
+                      const { error: deleteError } = await supabase
+                        .from('bookings')
+                        .delete()
+                        .eq('id', deleteConfirm.bookingId);
+                      
+                      if (!deleteError) {
+                        // Libérer les places dans le créneau
+                        const slotId = `${booking.date}-${booking.time}`;
+                        const slot = timeSlots.find(s => s.id === slotId);
+                        
+                        if (slot) {
+                          await supabase
+                            .from('time_slots')
+                            .update({ 
+                              booked_spots: Math.max(0, slot.bookedSpots - booking.spotsReserved)
+                            })
+                            .eq('id', slotId);
+                        }
+                        
+                        // Recharger les données
+                        await loadBookings();
+                        await loadTimeSlots();
+                        setDeleteConfirm({ show: false, bookingId: '', clientName: '' });
+                      } else {
+                        alert('Erreur lors de la suppression');
+                      }
                     }
                   }}
                   className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors"
