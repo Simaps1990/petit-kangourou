@@ -181,43 +181,32 @@ export const emailService = {
     });
   },
 
-  // Fonction générique d'envoi d'email via API
+  // Fonction générique d'envoi d'email via Netlify Function
   async sendEmail(data: EmailData): Promise<{ success: boolean; error?: string }> {
     try {
-      // Si la clé API Resend est configurée, on envoie vraiment l'email
-      const resendApiKey = import.meta.env.VITE_RESEND_API_KEY;
-      
-      if (resendApiKey && resendApiKey !== 'your_resend_api_key') {
-        // Envoi réel avec Resend
-        const response = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${resendApiKey}`,
-          },
-          body: JSON.stringify({
-            from: 'Petit Kangourou <onboarding@resend.dev>', // Changez ceci quand vous aurez un domaine vérifié
+      // Appeler la fonction Netlify au lieu d'appeler Resend directement
+      const response = await fetch('/.netlify/functions/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'custom',
+          data: {
             to: data.to,
             subject: data.subject,
             html: data.html,
-          }),
-        });
+          },
+        }),
+      });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erreur lors de l\'envoi de l\'email');
-        }
-
-        console.log('✅ Email envoyé avec succès à:', data.to);
-        return { success: true };
-      } else {
-        // Mode simulation (développement)
-        console.log('📧 Email simulé (pas de clé API Resend) :', {
-          to: data.to,
-          subject: data.subject,
-        });
-        return { success: true };
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'envoi de l\'email');
       }
+
+      const result = await response.json();
+      console.log('✅ Email envoyé avec succès à:', data.to);
+      return { success: true };
     } catch (error) {
       console.error('❌ Erreur envoi email:', error);
       return { 
