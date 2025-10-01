@@ -47,15 +47,15 @@ export const emailService = {
         <body>
           <div class="container">
             <div class="header">
-              <h1>🦘 Petit Kangourou</h1>
-              <p>Confirmation de votre réservation</p>
+              <h1>🦘 Bienvenue chez Petit Kangourou</h1>
+              <p>Votre réservation est confirmée !</p>
             </div>
             <div class="content">
               <h2>Bonjour ${data.clientName},</h2>
               <p>Votre réservation a été confirmée avec succès ! Je suis ravie de vous accompagner dans votre aventure de portage.</p>
               
               <div class="booking-code">
-                Code de réservation : ${data.bookingCode}
+                Voici votre code de réservation : ${data.bookingCode}
               </div>
               
               <div class="booking-details">
@@ -63,7 +63,7 @@ export const emailService = {
                 <p><strong>Service :</strong> ${data.serviceName}</p>
                 <p><strong>Date :</strong> ${data.date}</p>
                 <p><strong>Heure :</strong> ${data.time}</p>
-                <p><strong>Tarif :</strong> ${data.price}</p>
+                <p><strong>Tarif à régler sur place :</strong> ${data.price}</p>
               </div>
               
               <p><strong>Que faut-il prévoir ?</strong></p>
