@@ -336,46 +336,17 @@ function AdminPage() {
     }
   };
 
-  const deleteBooking = async (bookingId: string) => {
-    // Demander confirmation
-    if (!confirm('Voulez-vous vraiment supprimer cette réservation ?')) {
-      return;
-    }
-
-    // Trouver la réservation pour récupérer les infos
-    const booking = bookings.find(b => b.id === bookingId);
-    if (!booking) return;
-
-    // Supprimer la réservation de Supabase
-    const { error: deleteError } = await supabase
-      .from('bookings')
-      .delete()
-      .eq('id', bookingId);
-
-    if (deleteError) {
-      alert('Erreur lors de la suppression');
-      return;
-    }
-
-    // Remettre les places disponibles dans le créneau
-    const slotId = `${booking.date}-${booking.time}`;
-    const slot = timeSlots.find(s => s.id === slotId);
+  const updateBookingStatus = (bookingId: string, status: 'confirmed' | 'pending' | 'cancelled') => {
+    const updatedBookings = bookings.map(booking => 
+      booking.id === bookingId ? { ...booking, status } : booking
+    );
+    setBookings(updatedBookings);
     
-    if (slot) {
-      const newBookedSpots = Math.max(0, (slot.bookedSpots || 0) - (booking.spotsReserved || 1));
-      await supabase
-        .from('time_slots')
-        .update({ booked_spots: newBookedSpots })
-        .eq('id', slotId);
-      
-      // Recharger les créneaux
-      await loadTimeSlots();
+    // Mettre à jour dans localStorage
+    const booking = updatedBookings.find(b => b.id === bookingId);
+    if (booking) {
+      localStorage.setItem(`booking-${bookingId}`, JSON.stringify(booking));
     }
-
-    // Recharger les réservations
-    await loadBookings();
-    
-    alert('Réservation supprimée avec succès !');
   };
 
   const saveBlogPost = (post: Omit<BlogPost, 'id' | 'createdAt'>) => {
@@ -673,23 +644,29 @@ function AdminPage() {
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                            booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {booking.status === 'confirmed' ? 'Confirmé' :
-                             booking.status === 'pending' ? 'En attente' : 'Annulé'}
-                          </span>
+                          <select
+                            value={booking.status}
+                            onChange={(e) => updateBookingStatus(booking.id, e.target.value as any)}
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            <option value="confirmed">Confirmé</option>
+                            <option value="pending">En attente</option>
+                            <option value="cancelled">Annulé</option>
+                          </select>
                         </td>
                         <td className="py-3 px-4">
-                          <button 
-                            onClick={() => deleteBooking(booking.id)}
-                            className="px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg flex items-center gap-1 text-sm font-medium transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Supprimer
-                          </button>
+                          <div className="flex gap-2">
+                            <button className="p-1 text-[#c27275] hover:bg-[#fff1ee] rounded">
+                              <Eye className="h-4 w-4" />
+                            </button>
+                            <button className="p-1 text-[#c27275] hover:bg-[#fff1ee] rounded">
+                              <Edit className="h-4 w-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
