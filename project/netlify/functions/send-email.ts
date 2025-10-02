@@ -33,37 +33,41 @@ export const handler: Handler = async (event) => {
     switch (type) {
       case 'booking':
         emailData = {
-          from: 'Petit Kangourou <onboarding@resend.dev>',
+          from: 'Petit Kangourou <noreply@resend.dev>',
           to: data.clientEmail,
           subject: `Confirmation de réservation - Petit Kangourou (${data.bookingCode})`,
           html: generateBookingEmail(data),
+          reply_to: 'boyer_thomas@hotmail.fr',
         };
         break;
 
       case 'admin':
         emailData = {
-          from: 'Petit Kangourou <onboarding@resend.dev>',
-          to: 'paola.paviot@gmail.com',
+          from: 'Petit Kangourou <noreply@resend.dev>',
+          to: 'boyer_thomas@hotmail.fr',
           subject: `Nouvelle réservation - ${data.serviceName} (${data.bookingCode})`,
           html: generateAdminEmail(data),
+          reply_to: 'boyer_thomas@hotmail.fr',
         };
         break;
 
       case 'contact':
         emailData = {
-          from: 'Petit Kangourou <onboarding@resend.dev>',
-          to: 'paola.paviot@gmail.com',
+          from: 'Petit Kangourou <noreply@resend.dev>',
+          to: 'boyer_thomas@hotmail.fr',
           subject: `Contact site web - ${data.subject}`,
           html: generateContactEmail(data),
+          reply_to: data.email,
         };
         break;
 
       case 'custom':
         emailData = {
-          from: 'Petit Kangourou <onboarding@resend.dev>',
+          from: 'Petit Kangourou <noreply@resend.dev>',
           to: data.to,
           subject: data.subject,
           html: data.html,
+          reply_to: 'boyer_thomas@hotmail.fr',
         };
         break;
 
@@ -75,7 +79,7 @@ export const handler: Handler = async (event) => {
     }
 
     // Envoyer l'email via Resend
-    console.log('📧 Envoi email à:', emailData.to);
+    console.log('📧 Envoi email via Resend à:', emailData.to);
     
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -93,7 +97,7 @@ export const handler: Handler = async (event) => {
     }
 
     const result = await response.json();
-    console.log('✅ Email envoyé avec succès:', result);
+    console.log('✅ Email envoyé avec succès via Resend:', result);
 
     return {
       statusCode: 200,

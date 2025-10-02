@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart, Star, Users, Clock, ArrowRight, BookOpen } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -23,12 +23,6 @@ interface Service {
   icon: string;
 }
 
-interface FAQ {
-  id: string;
-  question: string;
-  answer: string;
-  order: number;
-}
 
 // Mapping des icônes
 const iconMap: Record<string, any> = {
@@ -63,13 +57,11 @@ function HomePage() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [services, setServices] = useState<Service[]>([]);
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
 
   useEffect(() => {
     loadBlogPosts();
     loadServices();
-    loadFaqs();
     
     const interval = setInterval(() => {
       setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
@@ -112,16 +104,6 @@ function HomePage() {
     }
   };
 
-  const loadFaqs = async () => {
-    const { data, error } = await supabase
-      .from('faqs')
-      .select('*')
-      .order('order', { ascending: true });
-    
-    if (data && !error) {
-      setFaqs(data);
-    }
-  };
 
   return (
     <div className="overflow-hidden">

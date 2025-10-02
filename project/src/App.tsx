@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Menu, X, Baby, Calendar, MessageCircle, Settings } from 'lucide-react';
 import HomePage from './pages/HomePage';

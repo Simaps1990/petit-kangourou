@@ -130,7 +130,7 @@ export const emailService = {
     `;
 
     return await this.sendEmail({
-      to: 'paola.paviot@gmail.com',
+      to: 'boyer_thomas@hotmail.fr',
       subject: `Nouvelle réservation - ${data.serviceName} (${data.bookingCode})`,
       html: emailHtml,
     });
@@ -175,7 +175,7 @@ export const emailService = {
     `;
 
     return await this.sendEmail({
-      to: 'paola.paviot@gmail.com',
+      to: 'boyer_thomas@hotmail.fr',
       subject: `Contact site web - ${data.subject}`,
       html: emailHtml,
     });
@@ -204,7 +204,7 @@ export const emailService = {
         throw new Error('Erreur lors de l\'envoi de l\'email');
       }
 
-      const result = await response.json();
+      await response.json();
       console.log('✅ Email envoyé avec succès à:', data.to);
       return { success: true };
     } catch (error) {
