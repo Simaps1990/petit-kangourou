@@ -129,6 +129,7 @@ export const emailService = {
       </html>
     `;
 
+    
     return await this.sendEmail({
       to: 'boyer_thomas@hotmail.fr',
       subject: `Nouvelle réservation - ${data.serviceName} (${data.bookingCode})`,

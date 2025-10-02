@@ -96,15 +96,6 @@ function BookingPage() {
         const [hours, minutes] = slot.time.split(':');
         const slotDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
         
-        console.log('🔍 Créneau:', {
-          date: slot.date,
-          time: slot.time,
-          slotDateTime: slotDateTime.toISOString(),
-          now: now.toISOString(),
-          isFuture: slotDateTime > now,
-          spotsLeft
-        });
-        
         return spotsLeft > 0 && slotDateTime > now;
       });
       
