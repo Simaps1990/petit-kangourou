@@ -354,92 +354,172 @@ function AdminPage() {
     }
   };
 
-  const saveBlogPost = (post: Omit<BlogPost, 'id' | 'createdAt'>) => {
-    const newPost: BlogPost = {
-      ...post,
-      id: editingPost?.id || Date.now().toString(),
-      createdAt: editingPost?.createdAt || new Date().toISOString()
-    };
-
-    const updatedPosts = editingPost 
-      ? blogPosts.map(p => p.id === editingPost.id ? newPost : p)
-      : [...blogPosts, newPost];
+  const saveBlogPost = async (post: Omit<BlogPost, 'id' | 'createdAt'>) => {
+    if (editingPost) {
+      // Mise à jour
+      const { error } = await supabase
+        .from('blog_posts')
+        .update({
+          title: post.title,
+          excerpt: post.excerpt,
+          content: post.content,
+          image: post.image,
+          read_time: post.readTime,
+          published: post.published
+        })
+        .eq('id', editingPost.id);
+      
+      if (!error) {
+        await loadBlogPosts();
+      }
+    } else {
+      // Création
+      const { error } = await supabase
+        .from('blog_posts')
+        .insert([{
+          title: post.title,
+          excerpt: post.excerpt,
+          content: post.content,
+          image: post.image,
+          read_time: post.readTime,
+          published: post.published
+        }]);
+      
+      if (!error) {
+        await loadBlogPosts();
+      }
+    }
     
-    setBlogPosts(updatedPosts);
-    localStorage.setItem('blog-posts', JSON.stringify(updatedPosts));
     setEditingPost(null);
     setShowPostForm(false);
   };
 
-  const deleteBlogPost = (postId: string) => {
-    const updatedPosts = blogPosts.filter(p => p.id !== postId);
-    setBlogPosts(updatedPosts);
-    localStorage.setItem('blog-posts', JSON.stringify(updatedPosts));
+  const deleteBlogPost = async (postId: string) => {
+    const { error } = await supabase
+      .from('blog_posts')
+      .delete()
+      .eq('id', postId);
+    
+    if (!error) {
+      await loadBlogPosts();
+    }
   };
 
-  const saveService = (service: Omit<Service, 'id'>) => {
-    const newService: Service = {
-      ...service,
-      id: editingService?.id || Date.now().toString()
-    };
-
-    const updatedServices = editingService 
-      ? services.map(s => s.id === editingService.id ? newService : s)
-      : [...services, newService];
+  const saveService = async (service: Omit<Service, 'id'>) => {
+    if (editingService) {
+      // Mise à jour
+      const { error } = await supabase
+        .from('services')
+        .update({
+          title: service.title,
+          description: service.description,
+          price: service.price,
+          duration: service.duration,
+          icon: service.icon,
+          max_spots: service.maxSpots,
+          type: service.type
+        })
+        .eq('id', editingService.id);
+      
+      if (!error) {
+        await loadServices();
+      }
+    } else {
+      // Création
+      const { error } = await supabase
+        .from('services')
+        .insert([{
+          title: service.title,
+          description: service.description,
+          price: service.price,
+          duration: service.duration,
+          icon: service.icon,
+          max_spots: service.maxSpots,
+          type: service.type
+        }]);
+      
+      if (!error) {
+        await loadServices();
+      }
+    }
     
-    setServices(updatedServices);
-    localStorage.setItem('services', JSON.stringify(updatedServices));
     setEditingService(null);
     setShowServiceForm(false);
   };
 
-  const deleteService = (serviceId: string) => {
-    const updatedServices = services.filter(s => s.id !== serviceId);
-    setServices(updatedServices);
-    localStorage.setItem('services', JSON.stringify(updatedServices));
+  const deleteService = async (serviceId: string) => {
+    const { error} = await supabase
+      .from('services')
+      .delete()
+      .eq('id', serviceId);
+    
+    if (!error) {
+      await loadServices();
+    }
   };
 
   const addFaq = () => {
-    const newFaq: FAQ = {
-      id: Date.now().toString(),
+    setEditingFaq({
+      id: '',
       question: 'Nouvelle question',
       answer: 'Réponse à la question',
       order: faqs.length + 1
-    };
-    const updatedFaqs = [...faqs, newFaq];
-    setFaqs(updatedFaqs);
-    localStorage.setItem('faqs', JSON.stringify(updatedFaqs));
-    setHasUnsavedChanges(true);
+    } as FAQ);
+    setShowFaqForm(true);
   };
 
-  const saveFaq = (faq: Omit<FAQ, 'id'>) => {
-    const newFaq: FAQ = {
-      ...faq,
-      id: editingFaq?.id || Date.now().toString()
-    };
-
-    const updatedFaqs = editingFaq 
-      ? faqs.map(f => f.id === editingFaq.id ? newFaq : f)
-      : [...faqs, newFaq];
+  const saveFaq = async (faq: Omit<FAQ, 'id'>) => {
+    if (editingFaq) {
+      // Mise à jour
+      const { error } = await supabase
+        .from('faqs')
+        .update({
+          question: faq.question,
+          answer: faq.answer,
+          order: faq.order
+        })
+        .eq('id', editingFaq.id);
+      
+      if (!error) {
+        await loadFaqs();
+      }
+    } else {
+      // Création
+      const { error } = await supabase
+        .from('faqs')
+        .insert([{
+          question: faq.question,
+          answer: faq.answer,
+          order: faq.order
+        }]);
+      
+      if (!error) {
+        await loadFaqs();
+      }
+    }
     
-    setFaqs(updatedFaqs.sort((a, b) => a.order - b.order));
-    localStorage.setItem('faqs', JSON.stringify(updatedFaqs));
     setEditingFaq(null);
     setShowFaqForm(false);
   };
 
-  const updateFaq = (faqId: string, field: 'question' | 'answer', value: string) => {
-    const updatedFaqs = faqs.map(f => 
-      f.id === faqId ? { ...f, [field]: value } : f
-    );
-    setFaqs(updatedFaqs);
-    localStorage.setItem('faqs', JSON.stringify(updatedFaqs));
+  const updateFaq = async (faqId: string, field: 'question' | 'answer', value: string) => {
+    await supabase
+      .from('faqs')
+      .update({ [field]: value })
+      .eq('id', faqId);
+    
+    await loadFaqs();
   };
 
-  const deleteFaq = (faqId: string) => {
-    const updatedFaqs = faqs.filter(f => f.id !== faqId);
-    setFaqs(updatedFaqs);
-    localStorage.setItem('faqs', JSON.stringify(updatedFaqs));
+  const deleteFaq = async (faqId: string) => {
+    const { error } = await supabase
+      .from('faqs')
+      .delete()
+      .eq('id', faqId);
+    
+    if (!error) {
+      await loadFaqs();
+    }
   };
 
   const formatDate = (dateStr: string) => {
