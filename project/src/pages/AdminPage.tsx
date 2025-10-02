@@ -1262,10 +1262,10 @@ function AdminPage() {
                   </button>
                 </div>
                 
-                <form onSubmit={(e) => {
+                <form onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.target as HTMLFormElement);
-                  saveService({
+                  await saveService({
                     title: formData.get('title') as string,
                     description: formData.get('description') as string,
                     price: formData.get('price') as string,
@@ -1405,10 +1405,10 @@ function AdminPage() {
                   </button>
                 </div>
                 
-                <form onSubmit={(e) => {
+                <form onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.target as HTMLFormElement);
-                  saveBlogPost({
+                  await saveBlogPost({
                     title: formData.get('title') as string,
                     excerpt: formData.get('excerpt') as string,
                     content: formData.get('content') as string,
@@ -1540,10 +1540,10 @@ function AdminPage() {
                   </button>
                 </div>
                 
-                <form onSubmit={(e) => {
+                <form onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.target as HTMLFormElement);
-                  saveFaq({
+                  await saveFaq({
                     question: formData.get('question') as string,
                     answer: formData.get('answer') as string,
                     order: parseInt(formData.get('order') as string)
