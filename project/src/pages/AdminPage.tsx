@@ -366,7 +366,8 @@ function AdminPage() {
           title: post.title,
           excerpt: post.excerpt,
           content: post.content,
-          image: post.image,
+          image: post.image || '',
+          date: post.date,
           read_time: post.readTime,
           published: post.published
         })
@@ -389,7 +390,8 @@ function AdminPage() {
           title: post.title,
           excerpt: post.excerpt,
           content: post.content,
-          image: post.image,
+          image: post.image || '',
+          date: post.date,
           read_time: post.readTime,
           published: post.published
         }])
