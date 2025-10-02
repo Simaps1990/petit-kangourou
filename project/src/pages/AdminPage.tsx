@@ -120,21 +120,50 @@ function AdminPage() {
     setHasUnsavedChanges(hasChanges);
   }, [settings, originalSettings]);
 
-  const loadSettings = () => {
-    const savedSettings = localStorage.getItem('site-settings');
-    if (savedSettings) {
-      const loadedSettings = JSON.parse(savedSettings);
+  const loadSettings = async () => {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('*')
+      .eq('id', 'main')
+      .single();
+    
+    if (data && !error) {
+      const loadedSettings = {
+        siteName: data.site_name,
+        siteDescription: data.site_description,
+        contactEmail: data.contact_email,
+        contactPhone: data.contact_phone,
+        address: data.address
+      };
       setSettings(loadedSettings);
       setOriginalSettings(loadedSettings);
     }
   };
 
-  const saveSettings = () => {
-    localStorage.setItem('site-settings', JSON.stringify(settings));
-    setOriginalSettings(settings);
-    setHasUnsavedChanges(false);
-    setShowSaveSuccess(true);
-    setTimeout(() => setShowSaveSuccess(false), 3000);
+  const saveSettings = async () => {
+    const { error } = await supabase
+      .from('site_settings')
+      .update({
+        site_name: settings.siteName,
+        site_description: settings.siteDescription,
+        contact_email: settings.contactEmail,
+        contact_phone: settings.contactPhone,
+        address: settings.address,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', 'main');
+    
+    if (!error) {
+      setOriginalSettings(settings);
+      setHasUnsavedChanges(false);
+      setShowSaveSuccess(true);
+      setTimeout(() => setShowSaveSuccess(false), 3000);
+      
+      // Déclencher un événement pour notifier les autres composants
+      window.dispatchEvent(new Event('settings-updated'));
+    } else {
+      alert('Erreur lors de la sauvegarde des paramètres');
+    }
   };
 
   const loadBookings = async () => {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Menu, X, Baby, Calendar, MessageCircle, Settings } from 'lucide-react';
+import { supabase } from './lib/supabase';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 import ContactPage from './pages/ContactPage';
@@ -113,18 +114,58 @@ function Navigation() {
 }
 
 function Footer() {
+  const [settings, setSettings] = useState({
+    siteName: 'Petit Kangourou',
+    siteDescription: 'Monitrice de portage physiologique certifiée à Versailles. Accompagnement personnalisé pour créer un lien unique avec votre bébé.',
+    contactEmail: 'contact@portagedouceur.fr',
+    contactPhone: '06 XX XX XX XX',
+    address: 'Versailles, France'
+  });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      const { data, error } = await supabase
+        .from('site_settings')
+        .select('*')
+        .eq('id', 'main')
+        .single();
+      
+      if (data && !error) {
+        setSettings({
+          siteName: data.site_name,
+          siteDescription: data.site_description,
+          contactEmail: data.contact_email,
+          contactPhone: data.contact_phone,
+          address: data.address
+        });
+      }
+    };
+    
+    loadSettings();
+    
+    // Écouter un événement personnalisé pour les changements
+    const handleSettingsUpdate = () => {
+      loadSettings();
+    };
+    
+    window.addEventListener('settings-updated', handleSettingsUpdate);
+    
+    return () => {
+      window.removeEventListener('settings-updated', handleSettingsUpdate);
+    };
+  }, []);
+
   return (
     <footer className="bg-[#c27275] text-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <img src="/kangourou.png" alt="Petit Kangourou" className="h-6 w-6" />
-              <span className="text-lg font-bold">Petit Kangourou</span>
+              <img src="/kangourou.png" alt={settings.siteName} className="h-6 w-6" />
+              <span className="text-lg font-bold">{settings.siteName}</span>
             </div>
             <p className="text-sm opacity-80">
-              Monitrice de portage physiologique certifiée à Versailles.
-              Accompagnement personnalisé pour créer un lien unique avec votre bébé.
+              {settings.siteDescription}
             </p>
           </div>
           <div>
@@ -139,14 +180,14 @@ function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Contact</h3>
             <div className="space-y-2 text-sm opacity-80">
-              <p>📍 Versailles, France</p>
-              <p>📧 contact@portagedouceur.fr</p>
-              <p>📞 06 XX XX XX XX</p>
+              <p>📍 {settings.address}</p>
+              <p>📧 {settings.contactEmail}</p>
+              <p>📞 {settings.contactPhone}</p>
             </div>
           </div>
         </div>
         <div className="border-t border-white/20 mt-8 pt-4 text-center text-sm opacity-60">
-          <p>&copy; 2025 Petit Kangourou. Tous droits réservés.</p>
+          <p>&copy; 2025 {settings.siteName}. Tous droits réservés.</p>
         </div>
       </div>
     </footer>
