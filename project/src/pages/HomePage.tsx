@@ -121,7 +121,10 @@ function HomePage() {
                 Créez un lien unique avec votre bébé dans le respect de son développement naturel.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <a href="/reservation" className="px-8 py-4 bg-[#fff1ee] text-[#c27275] rounded-full font-semibold hover:bg-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-center">
+                <a 
+                  href="/reservation"
+                  className="px-8 py-4 bg-[#fff1ee] text-[#c27275] rounded-full font-semibold hover:bg-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-center"
+                >
                   Réserver une consultation
                 </a>
               </div>
@@ -297,9 +300,12 @@ function HomePage() {
           <p className="text-xl mb-8 opacity-90">
             Réservez votre première consultation et découvrez les bienfaits du portage physiologique
           </p>
-          <button className="px-10 py-4 bg-white text-[#c27275] rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-xl">
+          <a 
+            href="/reservation"
+            className="inline-block px-10 py-4 bg-white text-[#c27275] rounded-full font-bold text-lg hover:bg-gray-100 transform hover:scale-105 transition-all duration-300 shadow-xl"
+          >
             Réserver maintenant
-          </button>
+          </a>
         </div>
         
         {/* Decorative elements */}
