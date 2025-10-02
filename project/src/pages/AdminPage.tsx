@@ -749,6 +749,21 @@ function AdminPage() {
                       </div>
                     </div>
                     
+                    {slot.bookedSpots > 0 && (
+                      <button
+                        onClick={async () => {
+                          await supabase
+                            .from('time_slots')
+                            .update({ booked_spots: 0 })
+                            .eq('id', slot.id);
+                          await loadTimeSlots();
+                        }}
+                        className="mt-2 w-full px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 text-xs font-medium transition-colors"
+                      >
+                        Réinitialiser les places
+                      </button>
+                    )}
+                    
                     <div className={`mt-3 px-2 py-1 rounded text-xs font-medium text-center ${
                       slot.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
