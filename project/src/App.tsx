@@ -45,6 +45,13 @@ function Navigation() {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onClick={() => {
+                    window.scrollTo(0, 0);
+                    // Force le rechargement si on est déjà sur la page
+                    if (isActive) {
+                      window.location.href = item.path;
+                    }
+                  }}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                     isActive 
                       ? 'bg-[#c27275] text-white font-semibold shadow-md' 
@@ -79,7 +86,14 @@ function Navigation() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    window.scrollTo(0, 0);
+                    // Force le rechargement si on est déjà sur la page
+                    if (isActive) {
+                      window.location.href = item.path;
+                    }
+                  }}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                     isActive 
                       ? 'bg-[#c27275] text-white font-semibold shadow-md' 
