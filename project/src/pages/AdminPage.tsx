@@ -355,8 +355,11 @@ function AdminPage() {
   };
 
   const saveBlogPost = async (post: Omit<BlogPost, 'id' | 'createdAt'>) => {
+    console.log('💾 Sauvegarde Blog:', post);
+    
     if (editingPost) {
       // Mise à jour
+      console.log('✏️ Mise à jour Blog:', editingPost.id);
       const { error } = await supabase
         .from('blog_posts')
         .update({
@@ -369,12 +372,16 @@ function AdminPage() {
         })
         .eq('id', editingPost.id);
       
-      if (!error) {
+      if (error) {
+        console.error('❌ Erreur update Blog:', error);
+      } else {
+        console.log('✅ Blog mis à jour');
         await loadBlogPosts();
       }
     } else {
       // Création
-      const { error } = await supabase
+      console.log('➕ Création nouveau Blog');
+      const { data, error } = await supabase
         .from('blog_posts')
         .insert([{
           title: post.title,
@@ -383,9 +390,13 @@ function AdminPage() {
           image: post.image,
           read_time: post.readTime,
           published: post.published
-        }]);
+        }])
+        .select();
       
-      if (!error) {
+      if (error) {
+        console.error('❌ Erreur création Blog:', error);
+      } else {
+        console.log('✅ Blog créé:', data);
         await loadBlogPosts();
       }
     }
@@ -469,8 +480,11 @@ function AdminPage() {
   };
 
   const saveFaq = async (faq: Omit<FAQ, 'id'>) => {
-    if (editingFaq) {
+    console.log('💾 Sauvegarde FAQ:', faq);
+    
+    if (editingFaq && editingFaq.id) {
       // Mise à jour
+      console.log('✏️ Mise à jour FAQ:', editingFaq.id);
       const { error } = await supabase
         .from('faqs')
         .update({
@@ -480,20 +494,28 @@ function AdminPage() {
         })
         .eq('id', editingFaq.id);
       
-      if (!error) {
+      if (error) {
+        console.error('❌ Erreur update FAQ:', error);
+      } else {
+        console.log('✅ FAQ mise à jour');
         await loadFaqs();
       }
     } else {
       // Création
-      const { error } = await supabase
+      console.log('➕ Création nouvelle FAQ');
+      const { data, error } = await supabase
         .from('faqs')
         .insert([{
           question: faq.question,
           answer: faq.answer,
           order: faq.order
-        }]);
+        }])
+        .select();
       
-      if (!error) {
+      if (error) {
+        console.error('❌ Erreur création FAQ:', error);
+      } else {
+        console.log('✅ FAQ créée:', data);
         await loadFaqs();
       }
     }
