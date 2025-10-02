@@ -76,7 +76,9 @@ function BookingPage() {
     if (data) {
       console.log('📅 Créneaux chargés depuis Supabase:', data.length);
       
-      // Mapper et filtrer les créneaux qui ont encore des places disponibles
+      const now = new Date();
+      
+      // Mapper et filtrer les créneaux qui ont encore des places disponibles ET qui ne sont pas passés
       const mappedSlots = data.map(slot => ({
         id: slot.id,
         date: slot.date,
@@ -88,7 +90,13 @@ function BookingPage() {
       
       const availableSlots = mappedSlots.filter(slot => {
         const spotsLeft = slot.maxSpots - slot.bookedSpots;
-        return spotsLeft > 0;
+        
+        // Vérifier si le créneau n'est pas passé
+        const [day, month, year] = slot.date.split('/');
+        const [hours, minutes] = slot.time.split(':');
+        const slotDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
+        
+        return spotsLeft > 0 && slotDateTime > now;
       });
       
       console.log('✅ Créneaux disponibles:', availableSlots.length);

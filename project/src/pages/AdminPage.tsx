@@ -719,59 +719,98 @@ function AdminPage() {
           {/* Bookings Tab */}
           {activeTab === 'bookings' && (
             <div>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-[#c27275]">Réservations</h2>
-                <div className="flex gap-2">
-                  <select className="px-3 py-2 border border-[#c27275]/20 rounded-lg">
-                    <option>Toutes</option>
-                    <option>Confirmées</option>
-                    <option>En attente</option>
-                    <option>Annulées</option>
-                  </select>
+              {/* Réservations à venir */}
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-[#c27275] mb-4">Réservations à venir</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#c27275]/20">
+                        <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Code</th>
+                        <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Client</th>
+                        <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Service</th>
+                        <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Date</th>
+                        <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bookings.filter(booking => {
+                        const [day, month, year] = booking.date.split('/');
+                        const [hours, minutes] = booking.time.split(':');
+                        const bookingDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
+                        return bookingDateTime > new Date();
+                      }).map((booking) => (
+                        <tr key={booking.id} className="border-b border-[#c27275]/10 hover:bg-[#fff1ee]">
+                          <td className="py-3 px-4 font-mono text-sm">{booking.id}</td>
+                          <td className="py-3 px-4">
+                            <div>
+                              <div className="font-medium">{booking.clientName}</div>
+                              <div className="text-sm text-[#c27275]/70">{booking.clientEmail}</div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">{booking.serviceName}</td>
+                          <td className="py-3 px-4">
+                            <div>
+                              <div>{formatDate(booking.date)}</div>
+                              <div className="text-sm text-[#c27275]/70">{booking.time}</div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <button 
+                              onClick={() => setDeleteConfirm({ show: true, bookingId: booking.id, clientName: booking.clientName })}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Supprimer la réservation"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-              
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-[#c27275]/20">
-                      <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Code</th>
-                      <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Client</th>
-                      <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Service</th>
-                      <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Date</th>
-                      <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bookings.map((booking) => (
-                      <tr key={booking.id} className="border-b border-[#c27275]/10 hover:bg-[#fff1ee]">
-                        <td className="py-3 px-4 font-mono text-sm">{booking.id}</td>
-                        <td className="py-3 px-4">
-                          <div>
-                            <div className="font-medium">{booking.clientName}</div>
-                            <div className="text-sm text-[#c27275]/70">{booking.clientEmail}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">{booking.serviceName}</td>
-                        <td className="py-3 px-4">
-                          <div>
-                            <div>{formatDate(booking.date)}</div>
-                            <div className="text-sm text-[#c27275]/70">{booking.time}</div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <button 
-                            onClick={() => setDeleteConfirm({ show: true, bookingId: booking.id, clientName: booking.clientName })}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Supprimer la réservation"
-                          >
-                            <Trash2 className="h-5 w-5" />
-                          </button>
-                        </td>
+
+              {/* Précédentes séances */}
+              <div>
+                <h2 className="text-2xl font-bold text-[#c27275] mb-4">Précédentes séances</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#c27275]/20">
+                        <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Code</th>
+                        <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Client</th>
+                        <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Service</th>
+                        <th className="text-left py-3 px-4 font-semibold text-[#c27275]">Date</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {bookings.filter(booking => {
+                        const [day, month, year] = booking.date.split('/');
+                        const [hours, minutes] = booking.time.split(':');
+                        const bookingDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
+                        return bookingDateTime <= new Date();
+                      }).map((booking) => (
+                        <tr key={booking.id} className="border-b border-[#c27275]/10 hover:bg-[#fff1ee] opacity-60">
+                          <td className="py-3 px-4 font-mono text-sm">{booking.id}</td>
+                          <td className="py-3 px-4">
+                            <div>
+                              <div className="font-medium">{booking.clientName}</div>
+                              <div className="text-sm text-[#c27275]/70">{booking.clientEmail}</div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">{booking.serviceName}</td>
+                          <td className="py-3 px-4">
+                            <div>
+                              <div>{formatDate(booking.date)}</div>
+                              <div className="text-sm text-[#c27275]/70">{booking.time}</div>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
