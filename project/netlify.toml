@@ -6,6 +6,11 @@
   # Dossier de sortie
   publish = "dist"
 
+# Configuration des Functions
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 # Désactiver le scan de secrets (la clé Supabase ANON est publique par design)
 [build.environment]
   SECRETS_SCAN_ENABLED = "false"

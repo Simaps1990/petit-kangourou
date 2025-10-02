@@ -189,8 +189,8 @@ function BookingPage() {
     setBooking(newBooking);
     setStep('confirmation');
 
-    // Envoyer les emails de confirmation
-    await emailService.sendBookingConfirmation({
+    // Envoyer les emails de confirmation (ne pas bloquer si erreur)
+    emailService.sendBookingConfirmation({
       clientName: clientDetails.name,
       clientEmail: clientDetails.email,
       serviceName: selectedService.title,
@@ -198,7 +198,7 @@ function BookingPage() {
       time: selectedSlot.time,
       bookingCode: bookingId,
       price: selectedService.price
-    });
+    }).catch(err => console.log('Info: Email client non envoyé', err));
 
     // Envoyer notification admin (ne pas bloquer si erreur)
     emailService.sendAdminNotification({

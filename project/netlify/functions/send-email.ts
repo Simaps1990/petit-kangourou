@@ -75,6 +75,8 @@ export const handler: Handler = async (event) => {
     }
 
     // Envoyer l'email via Resend
+    console.log('📧 Envoi email à:', emailData.to);
+    
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -86,10 +88,12 @@ export const handler: Handler = async (event) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Erreur Resend');
+      console.error('❌ Erreur Resend:', errorData);
+      throw new Error(JSON.stringify(errorData));
     }
 
-    console.log('✅ Email envoyé avec succès');
+    const result = await response.json();
+    console.log('✅ Email envoyé avec succès:', result);
 
     return {
       statusCode: 200,
