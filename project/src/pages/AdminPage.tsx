@@ -1438,11 +1438,34 @@ function AdminPage() {
                 <form onSubmit={async (e) => {
                   e.preventDefault();
                   const formData = new FormData(e.target as HTMLFormElement);
+                  
+                  let imageUrl = editingPost?.image || '';
+                  const imageFile = formData.get('imageFile') as File;
+                  
+                  // Si un fichier est uploadé, l'envoyer à Supabase Storage
+                  if (imageFile && imageFile.size > 0) {
+                    const fileName = `${Date.now()}-${imageFile.name}`;
+                    const { data, error } = await supabase.storage
+                      .from('blog-images')
+                      .upload(fileName, imageFile);
+                    
+                    if (!error && data) {
+                      const { data: { publicUrl } } = supabase.storage
+                        .from('blog-images')
+                        .getPublicUrl(fileName);
+                      imageUrl = publicUrl;
+                    } else {
+                      console.error('Erreur upload image:', error);
+                      alert('Erreur lors de l\'upload de l\'image');
+                      return;
+                    }
+                  }
+                  
                   await saveBlogPost({
                     title: formData.get('title') as string,
                     excerpt: formData.get('excerpt') as string,
                     content: formData.get('content') as string,
-                    image: formData.get('image') as string,
+                    image: imageUrl,
                     date: formData.get('date') as string,
                     readTime: formData.get('readTime') as string,
                     published: formData.get('published') === 'on'
@@ -1460,13 +1483,18 @@ function AdminPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[#c27275] font-medium mb-2">URL de l'image</label>
+                      <label className="block text-[#c27275] font-medium mb-2">Image</label>
                       <input
-                        name="image"
-                        type="url"
-                        defaultValue={editingPost?.image}
+                        name="imageFile"
+                        type="file"
+                        accept="image/*"
                         className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
                       />
+                      {editingPost?.image && (
+                        <div className="mt-2">
+                          <img src={editingPost.image} alt="Aperçu" className="h-20 rounded-lg object-cover" />
+                        </div>
+                      )}
                     </div>
                   </div>
                   
