@@ -736,9 +736,8 @@ function AdminPage() {
                     </thead>
                     <tbody>
                       {bookings.filter(booking => {
-                        const [day, month, year] = booking.date.split('/');
-                        const [hours, minutes] = booking.time.split(':');
-                        const bookingDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
+                        // Format de date depuis Supabase: YYYY-MM-DD
+                        const bookingDateTime = new Date(`${booking.date}T${booking.time}:00`);
                         return bookingDateTime > new Date();
                       }).map((booking) => (
                         <tr key={booking.id} className="border-b border-[#c27275]/10 hover:bg-[#fff1ee]">
@@ -787,9 +786,8 @@ function AdminPage() {
                     </thead>
                     <tbody>
                       {bookings.filter(booking => {
-                        const [day, month, year] = booking.date.split('/');
-                        const [hours, minutes] = booking.time.split(':');
-                        const bookingDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
+                        // Format de date depuis Supabase: YYYY-MM-DD
+                        const bookingDateTime = new Date(`${booking.date}T${booking.time}:00`);
                         return bookingDateTime <= new Date();
                       }).map((booking) => (
                         <tr key={booking.id} className="border-b border-[#c27275]/10 hover:bg-[#fff1ee] opacity-60">
