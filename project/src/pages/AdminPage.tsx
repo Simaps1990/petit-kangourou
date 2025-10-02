@@ -1235,45 +1235,6 @@ function AdminPage() {
                     </button>
                   </div>
                 </div>
-
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-semibold text-[#c27275] mb-4">FAQ</h3>
-                  <div className="space-y-4">
-                    {faqs.map((faq, index) => (
-                      <div key={faq.id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="text-sm text-gray-500">Question {index + 1}</span>
-                          <button
-                            onClick={() => deleteFaq(faq.id)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <input
-                          type="text"
-                          value={faq.question}
-                          onChange={(e) => updateFaq(faq.id, 'question', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded mb-2 focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
-                          placeholder="Question"
-                        />
-                        <textarea
-                          value={faq.answer}
-                          onChange={(e) => updateFaq(faq.id, 'answer', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
-                          placeholder="Réponse"
-                          rows={2}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <button
-                    onClick={addFaq}
-                    className="mt-4 px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275] transition-colors"
-                  >
-                    Ajouter une FAQ
-                  </button>
-                </div>
               </div>
 
               {/* Floating Save Button */}
