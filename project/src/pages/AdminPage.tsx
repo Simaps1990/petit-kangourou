@@ -296,16 +296,14 @@ function AdminPage() {
 
   const addTimeSlot = async () => {
     if (newSlot.date && newSlot.time) {
-      // Convertir YYYY-MM-DD en DD/MM/YYYY
-      const [year, month, day] = newSlot.date.split('-');
-      const formattedDate = `${day}/${month}/${year}`;
-      const slotId = `${formattedDate}-${newSlot.time}`;
+      // Garder le format YYYY-MM-DD pour la cohérence avec Supabase
+      const slotId = `${newSlot.date}-${newSlot.time}`;
       
       const { error } = await supabase
         .from('time_slots')
         .insert([{
           id: slotId,
-          date: formattedDate,
+          date: newSlot.date,
           time: newSlot.time,
           available: true,
           max_spots: newSlot.maxSpots,

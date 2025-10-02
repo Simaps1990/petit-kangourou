@@ -92,9 +92,8 @@ function BookingPage() {
         const spotsLeft = slot.maxSpots - slot.bookedSpots;
         
         // Vérifier si le créneau n'est pas passé
-        const [day, month, year] = slot.date.split('/');
-        const [hours, minutes] = slot.time.split(':');
-        const slotDateTime = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
+        // Format de date depuis Supabase: YYYY-MM-DD
+        const slotDateTime = new Date(`${slot.date}T${slot.time}:00`);
         
         return spotsLeft > 0 && slotDateTime > now;
       });
