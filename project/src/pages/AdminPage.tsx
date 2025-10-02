@@ -381,9 +381,11 @@ function AdminPage() {
     } else {
       // Création
       console.log('➕ Création nouveau Blog');
+      const newId = crypto.randomUUID();
       const { data, error } = await supabase
         .from('blog_posts')
         .insert([{
+          id: newId,
           title: post.title,
           excerpt: post.excerpt,
           content: post.content,
@@ -437,9 +439,11 @@ function AdminPage() {
       }
     } else {
       // Création
+      const newId = crypto.randomUUID();
       const { error } = await supabase
         .from('services')
         .insert([{
+          id: newId,
           title: service.title,
           description: service.description,
           price: service.price,
@@ -503,9 +507,11 @@ function AdminPage() {
     } else {
       // Création
       console.log('➕ Création nouvelle FAQ');
+      const newId = crypto.randomUUID();
       const { data, error } = await supabase
         .from('faqs')
         .insert([{
+          id: newId,
           question: faq.question,
           answer: faq.answer,
           order: faq.order
