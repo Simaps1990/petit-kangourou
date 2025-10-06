@@ -605,7 +605,7 @@ END:VCALENDAR`;
 
             <div className="space-y-4">
               <p className="text-[#c27275]/70">
-                Un email de confirmation a été envoyé à {booking.clientEmail}
+                Merci de noter le code de réservation !
               </p>
               
               <div className="flex gap-4 justify-center">
