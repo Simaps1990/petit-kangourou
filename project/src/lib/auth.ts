@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'petit-kangourou@hotmail.com';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'pkangourou@outlook.fr';
 
 export interface AuthUser {
   id: string;
@@ -22,7 +22,7 @@ export const authService = {
         return { user: null, error: error.message };
       }
 
-      if (data.user && data.user.email === ADMIN_EMAIL) {
+      if (data.user && data.user.email && data.user.email === ADMIN_EMAIL) {
         return {
           user: {
             id: data.user.id,
@@ -58,7 +58,7 @@ export const authService = {
         return { user: null, error: error.message };
       }
 
-      if (data.session && data.session.user.email === ADMIN_EMAIL) {
+      if (data.session && data.session.user.email && data.session.user.email === ADMIN_EMAIL) {
         return {
           user: {
             id: data.session.user.id,
@@ -77,8 +77,8 @@ export const authService = {
 
   // Écouter les changements d'authentification
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
-    return supabase.auth.onAuthStateChange((event, session) => {
-      if (session && session.user.email === ADMIN_EMAIL) {
+    return supabase.auth.onAuthStateChange((_event, session) => {
+      if (session && session.user.email && session.user.email === ADMIN_EMAIL) {
         callback({
           id: session.user.id,
           email: session.user.email,

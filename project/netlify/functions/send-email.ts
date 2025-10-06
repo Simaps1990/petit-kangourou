@@ -37,24 +37,24 @@ export const handler: Handler = async (event) => {
           to: data.clientEmail,
           subject: `Confirmation de réservation - Petit Kangourou (${data.bookingCode})`,
           html: generateBookingEmail(data),
-          reply_to: 'petit-kangourou@hotmail.com',
+          reply_to: 'pkangourou@outlook.fr',
         };
         break;
 
       case 'admin':
         emailData = {
           from: 'Petit Kangourou <noreply@resend.dev>',
-          to: 'petit-kangourou@hotmail.com',
+          to: 'pkangourou@outlook.fr',
           subject: `Nouvelle réservation - ${data.serviceName} (${data.bookingCode})`,
           html: generateAdminEmail(data),
-          reply_to: 'petit-kangourou@hotmail.com',
+          reply_to: 'pkangourou@outlook.fr',
         };
         break;
 
       case 'contact':
         emailData = {
           from: 'Petit Kangourou <noreply@resend.dev>',
-          to: 'petit-kangourou@hotmail.com',
+          to: 'pkangourou@outlook.fr',
           subject: `Contact site web - ${data.subject}`,
           html: generateContactEmail(data),
           reply_to: data.email,
@@ -67,7 +67,7 @@ export const handler: Handler = async (event) => {
           to: data.to,
           subject: data.subject,
           html: data.html,
-          reply_to: 'petit-kangourou@hotmail.com',
+          reply_to: 'pkangourou@outlook.fr',
         };
         break;
 
@@ -170,7 +170,7 @@ function generateBookingEmail(data: any): string {
             <p style="margin-top: 30px;">À très bientôt,<br><strong>Paola</strong><br>Monitrice de portage physiologique</p>
           </div>
           <div class="footer">
-            <p>📍 Versailles, France | 📧 petit-kangourou@hotmail.com | 📞 06 XX XX XX XX</p>
+            <p>📍 Versailles, France | 📧 pkangourou@outlook.fr | 📞 06 XX XX XX XX</p>
             <p>Pour annuler ou modifier votre réservation, utilisez votre code : ${data.bookingCode}</p>
           </div>
         </div>
