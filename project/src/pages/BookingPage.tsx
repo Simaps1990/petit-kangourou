@@ -607,6 +607,9 @@ END:VCALENDAR`;
               <p className="text-[#c27275]/70">
                 Merci de noter le code de réservation !
               </p>
+              <p className="text-[#c27275]/70">
+                Je vous recontacterai par email d'ici 48 heures
+              </p>
               
               <div className="flex gap-4 justify-center">
                 <button
