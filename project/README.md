@@ -56,7 +56,7 @@ Dans l'éditeur SQL de Supabase, exécutez le fichier `supabase-schema.sql` four
 
 1. Dans Supabase, allez dans **Authentication** > **Users**
 2. Cliquez sur **Add user** > **Create new user**
-3. Email: `paola.paviot@gmail.com`
+3. Email: `petit-kangourou@hotmail.com`
 4. Password: `Chocol@t31!`
 5. ✅ Cochez **Auto Confirm User**
 
@@ -67,7 +67,7 @@ Créez un fichier `.env` à la racine du projet :
 ```env
 VITE_SUPABASE_URL=https://votre-projet.supabase.co
 VITE_SUPABASE_ANON_KEY=votre_clé_anon_publique
-VITE_ADMIN_EMAIL=paola.paviot@gmail.com
+VITE_ADMIN_EMAIL=petit-kangourou@hotmail.com
 ```
 
 ### 4. Lancer le projet
@@ -81,7 +81,7 @@ Le site sera accessible sur `http://localhost:5173`
 ## 🔐 Connexion Admin
 
 - **URL**: `http://localhost:5173/admin`
-- **Email**: `paola.paviot@gmail.com`
+- **Email**: `petit-kangourou@hotmail.com`
 - **Mot de passe**: `Chocol@t31!`
 
 ## 📧 Configuration des emails (Optionnel)
@@ -169,7 +169,7 @@ N'oubliez pas de configurer les variables d'environnement sur votre plateforme d
 
 ### Authentification
 - ✅ Authentification via Supabase Auth (JWT)
-- ✅ Email admin configuré : `paola.paviot@gmail.com`
+- ✅ Email admin configuré : `petit-kangourou@hotmail.com`
 - ✅ Mot de passe sécurisé : `Chocol@t31!`
 - ✅ Sessions persistantes
 - ✅ Déconnexion sécurisée

@@ -60,7 +60,7 @@ Une fois déployé sur Netlify avec la clé `RESEND_API_KEY` configurée, les em
 ## 📧 Types d'emails envoyés
 
 1. **Confirmation client** : Email avec le code de réservation
-2. **Notification admin** : Email à paola.paviot@gmail.com
+2. **Notification admin** : Email à petit-kangourou@hotmail.com
 3. **Contact** : Formulaire de contact
 
 ## ⚠️ Note importante

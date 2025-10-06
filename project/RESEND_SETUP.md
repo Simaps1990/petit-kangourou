@@ -42,7 +42,7 @@ VITE_SUPABASE_URL=https://xxxxx.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 # Admin
-VITE_ADMIN_EMAIL=paola.paviot@gmail.com
+VITE_ADMIN_EMAIL=petit-kangourou@hotmail.com
 
 # Resend (pour les emails)
 VITE_RESEND_API_KEY=re_AbCdEfGh_1234567890
@@ -60,7 +60,7 @@ npm run dev
 
 Maintenant, quand quelqu'un fait une réservation :
 - ✅ Le client reçoit un email de confirmation
-- ✅ Vous recevez une notification sur `paola.paviot@gmail.com`
+- ✅ Vous recevez une notification sur `petit-kangourou@hotmail.com`
 
 ## 📧 Emails envoyés automatiquement
 
@@ -71,13 +71,13 @@ Maintenant, quand quelqu'un fait une réservation :
 - Conseils pour le rendez-vous
 
 ### 2. Notification admin (à vous)
-- Envoyé à `paola.paviot@gmail.com`
+- Envoyé à `petit-kangourou@hotmail.com`
 - Nouvelle réservation
 - Coordonnées du client
 - Lien vers l'admin
 
 ### 3. Message de contact
-- Envoyé à `paola.paviot@gmail.com`
+- Envoyé à `petit-kangourou@hotmail.com`
 - Formulaire de contact du site
 - Coordonnées de la personne
 

@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'paola.paviot@gmail.com';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'petit-kangourou@hotmail.com';
 
 export interface AuthUser {
   id: string;

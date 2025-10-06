@@ -18,7 +18,7 @@ Dans l'éditeur SQL de Supabase, exécutez le script SQL fourni dans `supabase-s
 1. Dans Supabase, allez dans **Authentication** > **Users**
 2. Cliquez sur **Add user** > **Create new user**
 3. Créez l'utilisateur admin :
-   - Email : `paola.paviot@gmail.com`
+   - Email : `petit-kangourou@hotmail.com`
    - Password : `Chocol@t31!`
    - Auto Confirm User : **Activé**
 

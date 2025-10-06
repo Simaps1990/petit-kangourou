@@ -78,7 +78,7 @@ export const emailService = {
               <p style="margin-top: 30px;">À très bientôt,<br><strong>Paola</strong><br>Monitrice de portage physiologique</p>
             </div>
             <div class="footer">
-              <p>📍 Versailles, France | 📧 paola.paviot@gmail.com | 📞 06 XX XX XX XX</p>
+              <p>📍 Versailles, France | 📧 petit-kangourou@hotmail.com | 📞 06 XX XX XX XX</p>
               <p>Pour annuler ou modifier votre réservation, utilisez votre code : ${data.bookingCode}</p>
             </div>
           </div>
@@ -131,7 +131,7 @@ export const emailService = {
 
     
     return await this.sendEmail({
-      to: 'boyer_thomas@hotmail.fr',
+      to: 'petit-kangourou@hotmail.com',
       subject: `Nouvelle réservation - ${data.serviceName} (${data.bookingCode})`,
       html: emailHtml,
     });
@@ -176,7 +176,7 @@ export const emailService = {
     `;
 
     return await this.sendEmail({
-      to: 'boyer_thomas@hotmail.fr',
+      to: 'petit-kangourou@hotmail.com',
       subject: `Contact site web - ${data.subject}`,
       html: emailHtml,
     });
