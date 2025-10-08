@@ -849,34 +849,45 @@ function AdminPage() {
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-[#c27275] mb-4">Gestion des créneaux</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="date"
-                    value={newSlot.date}
-                    onChange={(e) => setNewSlot({...newSlot, date: e.target.value})}
-                    className="px-3 py-2 border border-[#c27275]/20 rounded-lg flex-1"
-                  />
-                  <input
-                    type="time"
-                    value={newSlot.time}
-                    onChange={(e) => setNewSlot({...newSlot, time: e.target.value})}
-                    className="px-3 py-2 border border-[#c27275]/20 rounded-lg flex-1"
-                  />
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={newSlot.maxSpots}
-                    onChange={(e) => setNewSlot({...newSlot, maxSpots: parseInt(e.target.value)})}
-                    placeholder="Places"
-                    className="px-3 py-2 border border-[#c27275]/20 rounded-lg flex-1 sm:w-24"
-                  />
-                  <button
-                    onClick={addTimeSlot}
-                    className="px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 flex items-center justify-center gap-2 flex-1 sm:flex-initial"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Ajouter
-                  </button>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-[#c27275] mb-1">Date</label>
+                    <input
+                      type="date"
+                      value={newSlot.date}
+                      onChange={(e) => setNewSlot({...newSlot, date: e.target.value})}
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-[#c27275] mb-1">Heure</label>
+                    <input
+                      type="time"
+                      value={newSlot.time}
+                      onChange={(e) => setNewSlot({...newSlot, time: e.target.value})}
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
+                    />
+                  </div>
+                  <div className="flex-1 sm:w-32">
+                    <label className="block text-sm font-medium text-[#c27275] mb-1">Places max</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={newSlot.maxSpots}
+                      onChange={(e) => setNewSlot({...newSlot, maxSpots: parseInt(e.target.value)})}
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
+                    />
+                  </div>
+                  <div className="flex-1 sm:flex-initial">
+                    <label className="block text-sm font-medium text-[#c27275] mb-1 opacity-0">Action</label>
+                    <button
+                      onClick={addTimeSlot}
+                      className="w-full px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 flex items-center justify-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Ajouter
+                    </button>
+                  </div>
                 </div>
               </div>
               
