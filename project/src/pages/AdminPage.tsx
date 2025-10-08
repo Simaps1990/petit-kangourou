@@ -848,14 +848,14 @@ function AdminPage() {
             <div>
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-[#c27275] mb-4">Gestion des créneaux</h2>
-                <div className="grid grid-cols-3 gap-3 mb-3">
+                <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-[#c27275] mb-1">Date</label>
                     <input
                       type="date"
                       value={newSlot.date}
                       onChange={(e) => setNewSlot({...newSlot, date: e.target.value})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
                     />
                   </div>
                   <div>
@@ -864,28 +864,28 @@ function AdminPage() {
                       type="time"
                       value={newSlot.time}
                       onChange={(e) => setNewSlot({...newSlot, time: e.target.value})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#c27275] mb-1">Places</label>
+                    <label className="block text-sm font-medium text-[#c27275] mb-1">Places max</label>
                     <input
                       type="number"
                       min="1"
                       max="10"
                       value={newSlot.maxSpots}
                       onChange={(e) => setNewSlot({...newSlot, maxSpots: parseInt(e.target.value)})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg text-sm"
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
                     />
                   </div>
+                  <button
+                    onClick={addTimeSlot}
+                    className="w-full px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 flex items-center justify-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Ajouter un créneau
+                  </button>
                 </div>
-                <button
-                  onClick={addTimeSlot}
-                  className="w-full px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 flex items-center justify-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Ajouter un créneau
-                </button>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
