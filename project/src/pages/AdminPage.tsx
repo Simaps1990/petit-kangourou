@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Calendar, Plus, Trash2, CreditCard as Edit, Clock, BookOpen, Package, HelpCircle, Save, X, Settings, CheckCircle, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Calendar, Plus, Trash2, CreditCard as Edit, Clock, BookOpen, Package, HelpCircle, Save, X, Settings, CheckCircle, AlertCircle, MapPin } from 'lucide-react';
 import { authService } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 
@@ -94,7 +94,7 @@ function AdminPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
-  const [newSlot, setNewSlot] = useState({ date: '', time: '', maxSpots: 1 });
+  const [newSlot, setNewSlot] = useState({ date: '', time: '', maxSpots: 1, address: '', category: 'individual' });
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
@@ -336,12 +336,14 @@ function AdminPage() {
           time: newSlot.time,
           available: true,
           max_spots: newSlot.maxSpots,
-          booked_spots: 0
+          booked_spots: 0,
+          address: newSlot.address || '',
+          category: newSlot.category
         }]);
       
       if (!error) {
         await loadTimeSlots();
-        setNewSlot({ date: '', time: '', maxSpots: 1 });
+        setNewSlot({ date: '', time: '', maxSpots: 1, address: '', category: 'individual' });
       } else {
         alert('Erreur lors de l\'ajout du créneau');
       }
@@ -880,6 +882,35 @@ function AdminPage() {
                       className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
                       style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#c27275] mb-1 flex items-center gap-1">
+                      <MapPin className="h-4 w-4" />
+                      Adresse
+                    </label>
+                    <input
+                      type="text"
+                      value={newSlot.address}
+                      onChange={(e) => setNewSlot({...newSlot, address: e.target.value})}
+                      placeholder="Versailles, France"
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
+                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#c27275] mb-1">Catégorie</label>
+                    <select
+                      value={newSlot.category}
+                      onChange={(e) => setNewSlot({...newSlot, category: e.target.value})}
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
+                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                    >
+                      <option value="individual">Séance individuelle</option>
+                      <option value="couple">Séance en couple</option>
+                      <option value="group">Ateliers en groupe</option>
+                      <option value="home">Suivi à domicile</option>
+                      <option value="free">Libre</option>
+                    </select>
                   </div>
                   <button
                     onClick={addTimeSlot}

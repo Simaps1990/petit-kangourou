@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, User, Mail, Phone, Baby, Check, Search, Download } from 'lucide-react';
+import { User, Mail, Phone, Baby, Check, Search, Download } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { emailService } from '../lib/email';
 
@@ -10,15 +10,8 @@ interface TimeSlot {
   available: boolean;
   maxSpots: number;
   bookedSpots: number;
-}
-
-interface Service {
-  id: string;
-  title: string;
-  description: string;
-  price: string;
-  duration: string;
-  icon: string;
+  category: string;
+  address: string;
 }
 
 interface Booking {
@@ -37,8 +30,8 @@ interface Booking {
 }
 
 function BookingPage() {
-  const [step, setStep] = useState<'service' | 'slot' | 'details' | 'confirmation' | 'search'>('service');
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [step, setStep] = useState<'category' | 'slot' | 'details' | 'confirmation' | 'search'>('category');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [clientDetails, setClientDetails] = useState({
     name: '',
@@ -52,11 +45,9 @@ function BookingPage() {
   const [searchCode, setSearchCode] = useState('');
   const [foundBooking, setFoundBooking] = useState<Booking | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
 
   useEffect(() => {
     loadTimeSlots();
-    loadServices();
   }, []);
 
   const loadTimeSlots = async () => {
@@ -85,7 +76,9 @@ function BookingPage() {
         time: slot.time,
         available: slot.available,
         maxSpots: slot.max_spots,
-        bookedSpots: slot.booked_spots
+        bookedSpots: slot.booked_spots,
+        category: slot.category || 'free',
+        address: slot.address || ''
       }));
       
       const availableSlots = mappedSlots.filter(slot => {
@@ -105,23 +98,13 @@ function BookingPage() {
     }
   };
 
-  const loadServices = async () => {
-    const { data, error } = await supabase
-      .from('services')
-      .select('*')
-      .order('id', { ascending: true });
-    
-    if (data && !error) {
-      setServices(data);
-    }
-  };
 
   const generateBookingCode = (): string => {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
   };
 
-  const handleServiceSelect = async (service: Service) => {
-    setSelectedService(service);
+  const handleCategorySelect = async (category: string) => {
+    setSelectedCategory(category);
     setStep('slot');
     // Recharger les créneaux pour avoir les données à jour
     await loadTimeSlots();
@@ -133,16 +116,27 @@ function BookingPage() {
     setStep('details');
   };
 
+  const getCategoryLabel = (category: string): string => {
+    const labels: Record<string, string> = {
+      'individual': 'Séance individuelle',
+      'couple': 'Séance en couple',
+      'group': 'Ateliers en groupe',
+      'home': 'Suivi à domicile',
+      'free': 'Libre'
+    };
+    return labels[category] || category;
+  };
+
   const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedService || !selectedSlot) return;
+    if (!selectedCategory || !selectedSlot) return;
 
     const bookingId = generateBookingCode();
     const newBooking: Booking = {
       id: bookingId,
-      serviceId: selectedService.id,
-      serviceName: selectedService.title,
+      serviceId: selectedCategory,
+      serviceName: getCategoryLabel(selectedCategory),
       date: selectedSlot.date,
       time: selectedSlot.time,
       clientName: clientDetails.name,
@@ -159,8 +153,8 @@ function BookingPage() {
       .from('bookings')
       .insert([{
         id: bookingId,
-        service_id: selectedService.id,
-        service_name: selectedService.title,
+        service_id: selectedCategory,
+        service_name: getCategoryLabel(selectedCategory),
         date: selectedSlot.date,
         time: selectedSlot.time,
         client_name: clientDetails.name,
@@ -200,22 +194,22 @@ function BookingPage() {
     emailService.sendBookingConfirmation({
       clientName: clientDetails.name,
       clientEmail: clientDetails.email,
-      serviceName: selectedService.title,
+      serviceName: getCategoryLabel(selectedCategory),
       date: formatDate(selectedSlot.date),
       time: selectedSlot.time,
       bookingCode: bookingId,
-      price: selectedService.price
+      price: ''
     }).catch(err => console.log('Info: Email client non envoyé', err));
 
     // Envoyer notification admin (ne pas bloquer si erreur)
     emailService.sendAdminNotification({
       clientName: clientDetails.name,
       clientEmail: clientDetails.email,
-      serviceName: selectedService.title,
+      serviceName: getCategoryLabel(selectedCategory),
       date: formatDate(selectedSlot.date),
       time: selectedSlot.time,
       bookingCode: bookingId,
-      price: selectedService.price
+      price: ''
     }).catch(err => console.log('Info: Email admin non envoyé', err));
   };
 
@@ -315,7 +309,7 @@ END:VCALENDAR`;
         <div className="flex justify-center mb-8">
           <div className="flex bg-white rounded-full p-1 shadow-lg">
             <button
-              onClick={() => setStep('service')}
+              onClick={() => setStep('category')}
               className={`px-6 py-2 rounded-full transition-all duration-300 ${
                 step !== 'search' ? 'bg-[#c27275] text-white' : 'text-[#c27275] hover:bg-[#fff1ee]'
               }`}
@@ -385,60 +379,39 @@ END:VCALENDAR`;
           </div>
         )}
 
-        {/* Step 1: Service Selection */}
-        {step === 'service' && (
+        {/* Step 1: Category Selection */}
+        {step === 'category' && (
           <div>
-            {services.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {services.map((service) => (
-                  <div
-                    key={service.id}
-                    onClick={() => handleServiceSelect(service)}
-                    className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl cursor-pointer transform hover:-translate-y-2 transition-all duration-300 border border-transparent hover:border-[#c27275]/20"
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 bg-[#c27275] rounded-lg flex items-center justify-center flex-shrink-0">
-                        <img src={`/${service.icon}`} alt={service.title} className="h-6 w-6 brightness-0 invert" />
-                      </div>
-                      <h3 className="text-xl font-bold text-[#c27275]">{service.title}</h3>
-                    </div>
-                    <p className="text-[#c27275]/70 mb-4">{service.description}</p>
-                    <div className="flex justify-between items-center">
-                      <div className="text-2xl font-bold text-[#c27275]">{service.price}</div>
-                      <div className="text-sm text-[#c27275]/50">{service.duration}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
-                <Calendar className="h-16 w-16 text-[#c27275]/30 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-[#c27275] mb-2">Aucun service disponible</h3>
-                <p className="text-[#c27275]/70">
-                  Les offres d'accompagnement ne sont pas encore configurées. 
-                  Contactez-nous directement pour plus d'informations.
-                </p>
-                <button 
-                  onClick={() => window.location.href = '/contact'}
-                  className="mt-4 px-6 py-3 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275] transition-colors"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { id: 'individual', label: 'Séance individuelle', description: 'Un accompagnement personnalisé pour vous et votre bébé' },
+                { id: 'couple', label: 'Séance en couple', description: 'Apprenez ensemble les techniques de portage' },
+                { id: 'group', label: 'Ateliers en groupe', description: 'Partagez cette expérience avec d\'autres parents' },
+                { id: 'home', label: 'Suivi à domicile', description: 'Je me déplace chez vous pour un accompagnement sur mesure' }
+              ].map((category) => (
+                <div
+                  key={category.id}
+                  onClick={() => handleCategorySelect(category.id)}
+                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl cursor-pointer transform hover:-translate-y-2 transition-all duration-300 border border-transparent hover:border-[#c27275]/20"
                 >
-                  Nous contacter
-                </button>
-              </div>
-            )}
+                  <h3 className="text-xl font-bold text-[#c27275] mb-2">{category.label}</h3>
+                  <p className="text-[#c27275]/70">{category.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {/* Step 2: Time Slot Selection */}
-        {step === 'slot' && selectedService && (
+        {step === 'slot' && selectedCategory && (
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-[#c27275] mb-2">Choisissez votre créneau</h2>
-              <p className="text-[#c27275]/70">Service sélectionné: {selectedService.title}</p>
+              <p className="text-[#c27275]/70">Catégorie sélectionnée: {getCategoryLabel(selectedCategory)}</p>
             </div>
 
             <div className="space-y-6">
-              {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available))).map(([date, slots]) => (
+              {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available && (slot.category === selectedCategory || slot.category === 'free')))).map(([date, slots]) => (
                 <div key={date} className="border-b border-[#fff1ee] pb-4">
                   <h3 className="font-semibold text-[#c27275] mb-3 capitalize">
                     {formatDate(date)}
@@ -453,6 +426,7 @@ END:VCALENDAR`;
                           className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium flex flex-col items-center gap-1"
                         >
                           <span className="text-lg">{slot.time}</span>
+                          <span className="text-xs opacity-70">{getCategoryLabel(slot.category)}</span>
                           <span className="text-xs opacity-70">{spotsLeft} place{spotsLeft > 1 ? 's' : ''}</span>
                         </button>
                       );
@@ -465,15 +439,15 @@ END:VCALENDAR`;
         )}
 
         {/* Step 3: Client Details */}
-        {step === 'details' && selectedService && selectedSlot && (
+        {step === 'details' && selectedCategory && selectedSlot && (
           <div className="bg-white rounded-2xl shadow-lg p-8">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-[#c27275] mb-2">Vos informations</h2>
               <div className="bg-[#fff1ee] p-4 rounded-lg">
-                <p><strong>Service:</strong> {selectedService.title}</p>
+                <p><strong>Catégorie:</strong> {getCategoryLabel(selectedCategory)}</p>
                 <p><strong>Date:</strong> {formatDate(selectedSlot.date)}</p>
                 <p><strong>Heure:</strong> {selectedSlot.time}</p>
-                <p><strong>Prix:</strong> {selectedService.price}</p>
+                {selectedSlot.address && <p><strong>Adresse:</strong> {selectedSlot.address}</p>}
               </div>
             </div>
 
@@ -600,10 +574,9 @@ END:VCALENDAR`;
                 Code de réservation: {booking.id}
               </div>
               <div className="space-y-2 text-[#c27275]">
-                <p><strong>Service:</strong> {booking.serviceName}</p>
+                <p><strong>Catégorie:</strong> {booking.serviceName}</p>
                 <p><strong>Date:</strong> {formatDate(booking.date)}</p>
                 <p><strong>Heure:</strong> {booking.time}</p>
-                <p><strong>Prix:</strong> {selectedService?.price}</p>
                 <p><strong>Client:</strong> {booking.clientName}</p>
               </div>
             </div>
@@ -626,8 +599,8 @@ END:VCALENDAR`;
                 </button>
                 <button
                   onClick={() => {
-                    setStep('service');
-                    setSelectedService(null);
+                    setStep('category');
+                    setSelectedCategory('');
                     setSelectedSlot(null);
                     setClientDetails({name: '', email: '', phone: '', babyAge: '', notes: ''});
                     setBooking(null);
