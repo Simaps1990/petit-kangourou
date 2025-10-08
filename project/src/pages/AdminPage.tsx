@@ -1048,14 +1048,6 @@ function AdminPage() {
                       <span className="text-sm text-[#c27275]/70">Places max:</span>
                       <span className="font-semibold">{service.maxSpots}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-[#c27275]/70">Type:</span>
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        service.type === 'individual' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                      }`}>
-                        {service.type === 'individual' ? 'Individuel' : 'Groupe'}
-                      </span>
-                    </div>
                   </div>
                 ))}
               </div>
@@ -1389,31 +1381,20 @@ function AdminPage() {
                         className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[#c27275] font-medium mb-2">Type *</label>
-                      <select
-                        name="type"
-                        required
-                        defaultValue={editingService?.type || 'individual'}
-                        className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
-                      >
-                        <option value="individual">Individuel</option>
-                        <option value="group">Groupe</option>
-                      </select>
-                    </div>
                   </div>
                   
                   <div>
                     <label className="block text-[#c27275] font-medium mb-2">Icône</label>
                     <select
                       name="icon"
-                      defaultValue={editingService?.icon || 'Heart'}
+                      defaultValue={editingService?.icon || '1.png'}
                       className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
                     >
-                      <option value="Heart">Cœur</option>
-                      <option value="Users">Groupe</option>
-                      <option value="Star">Étoile</option>
-                      <option value="Clock">Horloge</option>
+                      <option value="1.png">Solo</option>
+                      <option value="2.png">Duo</option>
+                      <option value="3.png">Groupe</option>
+                      <option value="coeur.png">Coeur</option>
+                      <option value="star.png">Etoile</option>
                     </select>
                   </div>
                   
