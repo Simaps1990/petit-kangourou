@@ -396,7 +396,12 @@ END:VCALENDAR`;
                     onClick={() => handleServiceSelect(service)}
                     className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl cursor-pointer transform hover:-translate-y-2 transition-all duration-300 border border-transparent hover:border-[#c27275]/20"
                   >
-                    <h3 className="text-xl font-bold text-[#c27275] mb-2">{service.title}</h3>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 bg-[#c27275] rounded-lg flex items-center justify-center flex-shrink-0">
+                        <img src={`/${service.icon}`} alt={service.title} className="h-6 w-6 brightness-0 invert" />
+                      </div>
+                      <h3 className="text-xl font-bold text-[#c27275]">{service.title}</h3>
+                    </div>
                     <p className="text-[#c27275]/70 mb-4">{service.description}</p>
                     <div className="flex justify-between items-center">
                       <div className="text-2xl font-bold text-[#c27275]">{service.price}</div>
