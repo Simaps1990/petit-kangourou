@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 import ContactPage from './pages/ContactPage';
 import FAQPage from './pages/FAQPage';
+import LegalPage from './pages/LegalPage';
 import AdminPage from './pages/AdminPage';
 
 function ScrollToTop() {
@@ -170,8 +171,11 @@ function Footer() {
             </div>
           </div>
         </div>
-        <div className="border-t border-white/20 mt-8 pt-4 text-center text-sm opacity-60">
+        <div className="border-t border-white/20 mt-8 pt-4 text-center text-sm opacity-80">
           <p>&copy; 2025 {settings.siteName}. Tous droits réservés.</p>
+          <Link to="/mentions-legales" className="hover:underline mt-2 inline-block">
+            Mentions légales
+          </Link>
         </div>
       </div>
     </footer>
@@ -190,6 +194,7 @@ function App() {
             <Route path="/reservation" element={<BookingPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/faq" element={<FAQPage />} />
+            <Route path="/mentions-legales" element={<LegalPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </main>
