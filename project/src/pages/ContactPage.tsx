@@ -59,23 +59,8 @@ function ContactPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Information */}
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-3xl font-bold text-[#c27275] mb-8">
-                Parlons de votre projet
-              </h2>
-              <p className="text-[#c27275]/70 text-lg mb-8">
-                Monitrice certifiée en portage physiologique, je vous accompagne avec bienveillance 
-                pour créer un lien unique avec votre bébé. N'hésitez pas à me contacter pour 
-                toute question ou pour planifier votre première consultation.
-              </p>
-            </div>
-
-          </div>
-
-          {/* Contact Form */}
+        {/* Contact Form */}
+        <div className="max-w-3xl mx-auto">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="flex items-center mb-6">
               <MessageCircle className="h-8 w-8 text-[#c27275] mr-3" />
