@@ -20,6 +20,7 @@ interface Booking {
   serviceName: string;
   date: string;
   time: string;
+  address: string;
   clientName: string;
   clientEmail: string;
   clientPhone: string;
@@ -139,6 +140,7 @@ function BookingPage() {
       serviceName: getCategoryLabel(selectedCategory),
       date: selectedSlot.date,
       time: selectedSlot.time,
+      address: selectedSlot.address,
       clientName: clientDetails.name,
       clientEmail: clientDetails.email,
       clientPhone: clientDetails.phone,
@@ -228,6 +230,7 @@ function BookingPage() {
         serviceName: data.service_name,
         date: data.date,
         time: data.time,
+        address: data.address || '',
         clientName: data.client_name,
         clientEmail: data.client_email,
         clientPhone: data.client_phone,
@@ -356,9 +359,10 @@ END:VCALENDAR`;
               <div className="mt-6 p-4 bg-[#fff1ee] rounded-lg">
                 <h3 className="font-semibold text-[#c27275] mb-2">Réservation trouvée</h3>
                 <div className="space-y-2 text-sm text-[#c27275]/80">
-                  <p><strong>Service:</strong> {foundBooking.serviceName}</p>
+                  <p><strong>Catégorie:</strong> {foundBooking.serviceName}</p>
                   <p><strong>Date:</strong> {formatDate(foundBooking.date)}</p>
                   <p><strong>Heure:</strong> {foundBooking.time}</p>
+                  {foundBooking.address && <p><strong>Lieu:</strong> {foundBooking.address}</p>}
                   <p><strong>Client:</strong> {foundBooking.clientName}</p>
                   <p><strong>Email:</strong> {foundBooking.clientEmail}</p>
                   <p><strong>Statut:</strong> 
@@ -384,17 +388,22 @@ END:VCALENDAR`;
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { id: 'individual', label: 'Séance individuelle', description: 'Un accompagnement personnalisé pour vous et votre bébé' },
-                { id: 'couple', label: 'Séance en couple', description: 'Apprenez ensemble les techniques de portage' },
-                { id: 'group', label: 'Ateliers en groupe', description: 'Partagez cette expérience avec d\'autres parents' },
-                { id: 'home', label: 'Suivi à domicile', description: 'Je me déplace chez vous pour un accompagnement sur mesure' }
+                { id: 'individual', label: 'Séance individuelle', description: 'Un accompagnement personnalisé pour vous et votre bébé', icon: '1.png' },
+                { id: 'couple', label: 'Séance en couple', description: 'Apprenez ensemble les techniques de portage', icon: '2.png' },
+                { id: 'group', label: 'Ateliers en groupe', description: 'Partagez cette expérience avec d\'autres parents', icon: '3.png' },
+                { id: 'home', label: 'Suivi à domicile', description: 'Je me déplace chez vous pour un accompagnement sur mesure', icon: 'coeur.png' }
               ].map((category) => (
                 <div
                   key={category.id}
                   onClick={() => handleCategorySelect(category.id)}
                   className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl cursor-pointer transform hover:-translate-y-2 transition-all duration-300 border border-transparent hover:border-[#c27275]/20"
                 >
-                  <h3 className="text-xl font-bold text-[#c27275] mb-2">{category.label}</h3>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 bg-[#c27275] rounded-lg flex items-center justify-center flex-shrink-0">
+                      <img src={`/${category.icon}`} alt={category.label} className="h-6 w-6 brightness-0 invert" />
+                    </div>
+                    <h3 className="text-xl font-bold text-[#c27275]">{category.label}</h3>
+                  </div>
                   <p className="text-[#c27275]/70">{category.description}</p>
                 </div>
               ))}
@@ -577,6 +586,7 @@ END:VCALENDAR`;
                 <p><strong>Catégorie:</strong> {booking.serviceName}</p>
                 <p><strong>Date:</strong> {formatDate(booking.date)}</p>
                 <p><strong>Heure:</strong> {booking.time}</p>
+                {booking.address && <p><strong>Lieu:</strong> {booking.address}</p>}
                 <p><strong>Client:</strong> {booking.clientName}</p>
               </div>
             </div>

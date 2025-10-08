@@ -26,6 +26,8 @@ interface TimeSlot {
   available: boolean;
   maxSpots: number;
   bookedSpots: number;
+  category?: string;
+  address?: string;
 }
 
 interface BlogPost {
@@ -216,7 +218,9 @@ function AdminPage() {
         time: slot.time,
         available: slot.available,
         maxSpots: slot.max_spots,
-        bookedSpots: slot.booked_spots
+        bookedSpots: slot.booked_spots,
+        category: slot.category,
+        address: slot.address
       }));
       
       console.log('✅ Créneaux mappés:', newSlots);
@@ -931,6 +935,27 @@ function AdminPage() {
                         <div className="font-semibold text-[#c27275]">{formatDate(slot.date)}</div>
                         <div className="text-xs text-[#c27275]/60 mt-2 mb-1">Heure</div>
                         <div className="text-lg font-bold">{slot.time}</div>
+                        {slot.category && (
+                          <>
+                            <div className="text-xs text-[#c27275]/60 mt-2 mb-1">Type</div>
+                            <div className="text-sm font-medium text-[#c27275]">
+                              {slot.category === 'individual' && 'Séance individuelle'}
+                              {slot.category === 'couple' && 'Séance en couple'}
+                              {slot.category === 'group' && 'Ateliers en groupe'}
+                              {slot.category === 'home' && 'Suivi à domicile'}
+                              {slot.category === 'free' && 'Libre'}
+                            </div>
+                          </>
+                        )}
+                        {slot.address && (
+                          <>
+                            <div className="text-xs text-[#c27275]/60 mt-2 mb-1 flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              Lieu
+                            </div>
+                            <div className="text-sm text-[#c27275]">{slot.address}</div>
+                          </>
+                        )}
                       </div>
                       <div className="flex gap-1">
                         <button
