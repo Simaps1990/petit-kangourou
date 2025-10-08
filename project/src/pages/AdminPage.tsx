@@ -884,8 +884,10 @@ function AdminPage() {
                 {timeSlots.map((slot) => (
                   <div key={slot.id} className="border border-[#c27275]/20 rounded-lg p-4">
                     <div className="flex justify-between items-start mb-3">
-                      <div>
+                      <div className="flex-1">
+                        <div className="text-xs text-[#c27275]/60 mb-1">Date</div>
                         <div className="font-semibold text-[#c27275]">{formatDate(slot.date)}</div>
+                        <div className="text-xs text-[#c27275]/60 mt-2 mb-1">Heure</div>
                         <div className="text-lg font-bold">{slot.time}</div>
                       </div>
                       <div className="flex gap-1">
