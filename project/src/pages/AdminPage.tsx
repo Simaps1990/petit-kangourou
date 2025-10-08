@@ -855,8 +855,8 @@ function AdminPage() {
                       type="date"
                       value={newSlot.date}
                       onChange={(e) => setNewSlot({...newSlot, date: e.target.value})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white"
-                      style={{ minWidth: '100%', display: 'block' }}
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
+                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
                     />
                   </div>
                   <div>
@@ -865,8 +865,8 @@ function AdminPage() {
                       type="time"
                       value={newSlot.time}
                       onChange={(e) => setNewSlot({...newSlot, time: e.target.value})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white"
-                      style={{ minWidth: '100%', display: 'block' }}
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
+                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
                     />
                   </div>
                   <div>
@@ -877,8 +877,8 @@ function AdminPage() {
                       max="10"
                       value={newSlot.maxSpots}
                       onChange={(e) => setNewSlot({...newSlot, maxSpots: parseInt(e.target.value)})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white"
-                      style={{ minWidth: '100%', display: 'block' }}
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
+                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
                     />
                   </div>
                   <button
