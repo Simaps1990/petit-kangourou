@@ -34,7 +34,7 @@ function Navigation() {
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center space-x-2">
             <img src="/kangourou.png" alt="Petit Kangourou" className="h-8" />
-            <img src="/kangourou texte.png" alt="Petit Kangourou" className="h-6" />
+            <img src="/kangourou texte.png" alt="Petit Kangourou" style={{ width: '226px', height: '40px' }} />
           </Link>
 
           {/* Desktop Navigation */}
