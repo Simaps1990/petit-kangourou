@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Baby, Calendar, MessageCircle, Settings, HelpCircle } from 'lucide-react';
+import { Menu, X, Baby, Calendar, MessageCircle, HelpCircle } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
@@ -27,8 +27,7 @@ function Navigation() {
     { path: '/', label: 'Accueil', icon: Baby },
     { path: '/reservation', label: 'Réservation', icon: Calendar },
     { path: '/contact', label: 'Contact', icon: MessageCircle },
-    { path: '/faq', label: 'FAQ', icon: HelpCircle },
-    { path: '/admin', label: 'Admin', icon: Settings }
+    { path: '/faq', label: 'FAQ', icon: HelpCircle }
   ];
 
   return (
@@ -172,10 +171,17 @@ function Footer() {
           </div>
         </div>
         <div className="border-t border-white/20 mt-8 pt-4 text-center text-sm opacity-80">
-          <p>&copy; 2025 {settings.siteName}. Tous droits réservés.</p>
-          <Link to="/mentions-legales" className="hover:underline mt-2 inline-block">
-            Mentions légales
-          </Link>
+          <div className="flex flex-wrap justify-center items-center gap-2">
+            <span>&copy; 2025 {settings.siteName}. Tous droits réservés.</span>
+            <span>•</span>
+            <Link to="/mentions-legales" className="hover:underline">
+              Mentions légales
+            </Link>
+            <span>•</span>
+            <Link to="/admin" className="hover:underline">
+              Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
