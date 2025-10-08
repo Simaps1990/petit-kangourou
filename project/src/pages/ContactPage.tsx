@@ -39,9 +39,9 @@ function ContactPage() {
   };
 
   const subjects = [
-    'Demande de renseignements',
-    'Prise de rendez-vous',
-    'Formation en groupe',
+    'Demande d\'informations',
+    'Prendre un rendez-vous',
+    'Ateliers en groupe',
     'Autre'
   ];
 
@@ -144,7 +144,7 @@ function ContactPage() {
                   onChange={(e) => setFormData({...formData, message: e.target.value})}
                   rows={5}
                   className="w-full px-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent transition-all duration-200 resize-none"
-                  placeholder="Parlez-moi de votre projet, vos questions sur le portage, l'âge de votre bébé..."
+                  placeholder="Ecrivez votre message ici..."
                 />
               </div>
 
