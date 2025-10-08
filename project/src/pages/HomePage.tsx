@@ -117,8 +117,11 @@ function HomePage() {
                 <span className="block text-white">Kangourou</span>
               </h1>
               <p className="text-xl text-white/80 leading-relaxed">
-                Monitrice certifiée en portage physiologique à Versailles. 
-                Créez un lien unique avec votre bébé dans le respect de son développement naturel.
+                Monitrice certifiée en portage physiologique à Versailles
+                <br />
+                Porter votre bébé, c'est lui offrir sécurité, douceur et proximité.
+                <br />
+                Je vous accompagne pour créer ce lien unique dans le respect de sa physiologie.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a 
@@ -154,7 +157,7 @@ function HomePage() {
               Mes accompagnements
             </h2>
             <p className="text-xl text-[#c27275]/70 max-w-3xl mx-auto">
-              Des formules adaptées à vos besoins pour découvrir les joies du portage physiologique
+            Apprenez à porter votre bébé en toute confiance grâce à des séances adaptées à vos besoins, à votre rythme, et à celui de votre enfant.
             </p>
           </div>
           
@@ -236,10 +239,10 @@ function HomePage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-[#c27275] mb-6">
-              Conseils & Actualités
+            Autour du portage
             </h2>
             <p className="text-xl text-[#c27275]/70">
-              Découvrez mes derniers articles sur le portage et la parentalité
+            Des astuces pour porter votre bébé en toute sérénité et nourrir votre parentalité avec confiance et bienveillance.
             </p>
           </div>
           
