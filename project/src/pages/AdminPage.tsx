@@ -97,6 +97,7 @@ function AdminPage() {
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [newSlot, setNewSlot] = useState({ date: '', time: '', maxSpots: 1, address: '', category: 'individual' });
+  const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
@@ -328,28 +329,50 @@ function AdminPage() {
   };
 
   const addTimeSlot = async () => {
-    if (newSlot.date && newSlot.time) {
-      // Garder le format YYYY-MM-DD pour la cohérence avec Supabase
-      const slotId = `${newSlot.date}-${newSlot.time}`;
-      
+    if (editingSlot) {
+      // Mode édition
       const { error } = await supabase
         .from('time_slots')
-        .insert([{
-          id: slotId,
+        .update({
           date: newSlot.date,
           time: newSlot.time,
-          available: true,
           max_spots: newSlot.maxSpots,
-          booked_spots: 0,
           address: newSlot.address || '',
           category: newSlot.category
-        }]);
+        })
+        .eq('id', editingSlot.id);
       
       if (!error) {
         await loadTimeSlots();
         setNewSlot({ date: '', time: '', maxSpots: 1, address: '', category: 'individual' });
+        setEditingSlot(null);
       } else {
-        alert('Erreur lors de l\'ajout du créneau');
+        alert('Erreur lors de la modification du créneau');
+      }
+    } else {
+      // Mode création
+      if (newSlot.date && newSlot.time) {
+        const slotId = `${newSlot.date}-${newSlot.time}`;
+        
+        const { error } = await supabase
+          .from('time_slots')
+          .insert([{
+            id: slotId,
+            date: newSlot.date,
+            time: newSlot.time,
+            available: true,
+            max_spots: newSlot.maxSpots,
+            booked_spots: 0,
+            address: newSlot.address || '',
+            category: newSlot.category
+          }]);
+        
+        if (!error) {
+          await loadTimeSlots();
+          setNewSlot({ date: '', time: '', maxSpots: 1, address: '', category: 'individual' });
+        } else {
+          alert('Erreur lors de l\'ajout du créneau');
+        }
       }
     }
   };
@@ -916,13 +939,35 @@ function AdminPage() {
                       <option value="free">Libre</option>
                     </select>
                   </div>
-                  <button
-                    onClick={addTimeSlot}
-                    className="w-full px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 flex items-center justify-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Ajouter un créneau
-                  </button>
+                  <div className="flex gap-2">
+                    {editingSlot && (
+                      <button
+                        onClick={() => {
+                          setEditingSlot(null);
+                          setNewSlot({ date: '', time: '', maxSpots: 1, address: '', category: 'individual' });
+                        }}
+                        className="flex-1 px-4 py-2 bg-gray-200 text-[#c27275] rounded-lg hover:bg-gray-300"
+                      >
+                        Annuler
+                      </button>
+                    )}
+                    <button
+                      onClick={addTimeSlot}
+                      className="flex-1 px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 flex items-center justify-center gap-2"
+                    >
+                      {editingSlot ? (
+                        <>
+                          <Edit className="h-4 w-4" />
+                          Modifier le créneau
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4" />
+                          Ajouter un créneau
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
               
@@ -958,6 +1003,22 @@ function AdminPage() {
                         )}
                       </div>
                       <div className="flex gap-1">
+                        <button
+                          onClick={() => {
+                            setEditingSlot(slot);
+                            setNewSlot({
+                              date: slot.date,
+                              time: slot.time,
+                              maxSpots: slot.maxSpots,
+                              address: slot.address || '',
+                              category: slot.category || 'individual'
+                            });
+                          }}
+                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                          title="Modifier"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => toggleSlotAvailability(slot.id)}
                           className={`p-1 rounded ${slot.available ? 'text-green-600' : 'text-red-600'}`}
