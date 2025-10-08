@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, Star, Users, Clock, ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowRight, BookOpen, Star, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface BlogPost {
@@ -22,15 +22,6 @@ interface Service {
   duration: string;
   icon: string;
 }
-
-
-// Mapping des icônes
-const iconMap: Record<string, any> = {
-  Heart,
-  Users,
-  Star,
-  Clock
-};
 
 const testimonials = [
   {
@@ -163,7 +154,6 @@ function HomePage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {services.map((service, index) => {
-              const Icon = iconMap[service.icon] || Heart;
               return (
                 <div 
                   key={service.id}
@@ -172,7 +162,7 @@ function HomePage() {
                 >
                   <div className="mb-4">
                     <div className="w-12 h-12 bg-[#c27275] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="h-6 w-6 text-white" />
+                      <img src={`/${service.icon}`} alt={service.title} className="h-6 w-6 brightness-0 invert" />
                     </div>
                     <h3 className="text-xl font-bold text-[#c27275] mb-2">{service.title}</h3>
                     <p className="text-[#c27275]/70 mb-4">{service.description}</p>
