@@ -54,8 +54,8 @@ function ContactPage() {
             Contactez-moi
           </h1>
           <p className="text-xl text-[#c27275]/70 max-w-3xl mx-auto">
-            Une question sur le portage physiologique ? Je suis là pour vous accompagner 
-            dans cette belle aventure avec votre bébé.
+          Chaque bébé et chaque parent sont uniques, et le portage est une expérience à partager. Je vous accompagne avec douceur et expertise pour vous aider à créer ce lien précieux. Contactez-moi pour toute question ou pour planifier votre première séance personnalisée.
+
           </p>
         </div>
 
