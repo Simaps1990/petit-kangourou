@@ -435,7 +435,7 @@ END:VCALENDAR`;
                           className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium flex flex-col items-center gap-1"
                         >
                           <span className="text-lg">{slot.time}</span>
-                          <span className="text-xs opacity-70">{getCategoryLabel(slot.category)}</span>
+                          {slot.address && <span className="text-xs opacity-70">{slot.address}</span>}
                           <span className="text-xs opacity-70">{spotsLeft} place{spotsLeft > 1 ? 's' : ''}</span>
                         </button>
                       );
