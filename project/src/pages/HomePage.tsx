@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight, BookOpen, Star, Clock } from 'lucide-react';
+import { ArrowRight, BookOpen, Star } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface BlogPost {
@@ -254,13 +254,6 @@ function HomePage() {
                   />
                 </div>
                 <div className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-[#c27275] font-medium">{post.date}</span>
-                    <div className="flex items-center text-sm text-[#c27275]/60">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {post.readTime}
-                    </div>
-                  </div>
                   <h3 className="text-xl font-bold text-[#c27275] mb-3 group-hover:text-[#c27275] transition-colors">
                     {post.title}
                   </h3>
@@ -328,13 +321,6 @@ function HomePage() {
               </div>
             </div>
             <div className="p-8">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm text-[#c27275] font-medium">{selectedPost.date}</span>
-                <div className="flex items-center text-sm text-[#c27275]/60">
-                  <Clock className="h-4 w-4 mr-1" />
-                  {selectedPost.readTime}
-                </div>
-              </div>
               <h1 className="text-3xl font-bold text-[#c27275] mb-4">{selectedPost.title}</h1>
               <div className="prose prose-lg max-w-none text-[#c27275]/80 leading-relaxed">
                 {selectedPost.content.split('\n').map((paragraph, index) => (

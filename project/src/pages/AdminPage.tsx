@@ -398,7 +398,7 @@ function AdminPage() {
           content: post.content,
           image: post.image || '',
           date: post.date,
-          read_time: post.readTime,
+          read_time: post.readTime || '5 min',
           published: post.published
         })
         .eq('id', editingPost.id);
@@ -411,8 +411,8 @@ function AdminPage() {
       }
     } else {
       // Création
-      console.log('➕ Création nouveau Blog');
-      const newId = crypto.randomUUID();
+      console.log('➕ Création Blog');
+      const newId = `post-${Date.now()}`;
       const { data, error } = await supabase
         .from('blog_posts')
         .insert([{
@@ -422,7 +422,7 @@ function AdminPage() {
           content: post.content,
           image: post.image || '',
           date: post.date,
-          read_time: post.readTime,
+          read_time: '5 min',
           published: post.published
         }])
         .select();
@@ -1082,10 +1082,6 @@ function AdminPage() {
                           </span>
                         </div>
                         <p className="text-[#c27275]/70 mb-2">{post.excerpt}</p>
-                        <div className="flex gap-4 text-sm text-[#c27275]/50">
-                          <span>{post.date}</span>
-                          <span>{post.readTime}</span>
-                        </div>
                       </div>
                       <div className="flex gap-1 ml-4">
                         <button
@@ -1473,8 +1469,8 @@ function AdminPage() {
                     excerpt: formData.get('excerpt') as string,
                     content: formData.get('content') as string,
                     image: imageUrl,
-                    date: formData.get('date') as string,
-                    readTime: formData.get('readTime') as string,
+                    date: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+                    readTime: '5 min',
                     published: formData.get('published') === 'on'
                   });
                 }} className="space-y-4">
@@ -1526,28 +1522,6 @@ function AdminPage() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-[#c27275] font-medium mb-2">Date *</label>
-                      <input
-                        name="date"
-                        type="text"
-                        required
-                        defaultValue={editingPost?.date}
-                        placeholder="15 Mars 2025"
-                        className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[#c27275] font-medium mb-2">Temps de lecture *</label>
-                      <input
-                        name="readTime"
-                        type="text"
-                        required
-                        defaultValue={editingPost?.readTime}
-                        placeholder="5 min"
-                        className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
-                      />
-                    </div>
                     <div className="flex items-center">
                       <label className="flex items-center">
                         <input
