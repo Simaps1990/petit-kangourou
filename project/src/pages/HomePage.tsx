@@ -162,7 +162,7 @@ function HomePage() {
                 >
                   <div className="mb-4">
                     <div className="w-12 h-12 bg-[#c27275] rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <img src={`/${service.icon}`} alt={service.title} className="h-6 w-6 brightness-0 invert" />
+                      <img src={`/${service.icon}`} alt={service.title} className="h-10 w-10 brightness-0 invert" />
                     </div>
                     <h3 className="text-xl font-bold text-[#c27275] mb-2">{service.title}</h3>
                     <p className="text-[#c27275]/70 mb-4">{service.description}</p>
