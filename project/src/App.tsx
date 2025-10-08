@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Baby, Calendar, MessageCircle, Settings } from 'lucide-react';
+import { Menu, X, Baby, Calendar, MessageCircle, Settings, HelpCircle } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 import ContactPage from './pages/ContactPage';
+import FAQPage from './pages/FAQPage';
 import AdminPage from './pages/AdminPage';
 
 function ScrollToTop() {
@@ -25,6 +26,7 @@ function Navigation() {
     { path: '/', label: 'Accueil', icon: Baby },
     { path: '/reservation', label: 'Réservation', icon: Calendar },
     { path: '/contact', label: 'Contact', icon: MessageCircle },
+    { path: '/faq', label: 'FAQ', icon: HelpCircle },
     { path: '/admin', label: 'Admin', icon: Settings }
   ];
 
@@ -151,11 +153,11 @@ function Footer() {
             </p>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">Services</h3>
+            <h3 className="font-semibold mb-4">Mes accompagnements</h3>
             <ul className="space-y-2 text-sm opacity-80">
-              <li>Consultation individuelle</li>
-              <li>Atelier en groupe</li>
-              <li>Formation personnalisée</li>
+              <li>Séance individuelle</li>
+              <li>Séance en couple</li>
+              <li>Ateliers en groupe</li>
               <li>Suivi à domicile</li>
             </ul>
           </div>
@@ -187,6 +189,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/reservation" element={<BookingPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/faq" element={<FAQPage />} />
             <Route path="/admin" element={<AdminPage />} />
           </Routes>
         </main>

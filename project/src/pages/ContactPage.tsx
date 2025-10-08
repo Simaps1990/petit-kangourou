@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
 import { Send, MessageCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import { emailService } from '../lib/email';
-
-interface FAQ {
-  id: string;
-  question: string;
-  answer: string;
-  order: number;
-}
 
 function ContactPage() {
   const [formData, setFormData] = useState({
@@ -20,22 +12,6 @@ function ContactPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
-
-  React.useEffect(() => {
-    loadFaqs();
-  }, []);
-
-  const loadFaqs = async () => {
-    const { data, error } = await supabase
-      .from('faqs')
-      .select('*')
-      .order('order', { ascending: true });
-    
-    if (data && !error) {
-      setFaqs(data);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,30 +193,6 @@ function ContactPage() {
               </p>
             </div>
           </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="mt-20">
-          <h2 className="text-3xl font-bold text-[#c27275] text-center mb-12">
-            Questions fréquentes
-          </h2>
-          {faqs.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {faqs.map((faq) => (
-                <div 
-                  key={faq.id}
-                  className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  <h3 className="font-semibold text-[#c27275] mb-3">{faq.question}</h3>
-                  <p className="text-[#c27275]/70 text-sm">{faq.answer}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-[#c27275]/70">Aucune question fréquente configurée pour le moment</p>
-            </div>
-          )}
         </div>
       </div>
     </div>
