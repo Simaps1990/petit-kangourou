@@ -119,9 +119,9 @@ function BookingPage() {
 
   const getCategoryLabel = (category: string): string => {
     const labels: Record<string, string> = {
-      'individual': 'Séance individuelle',
-      'couple': 'Séance en couple',
-      'group': 'Ateliers en groupe',
+      'individual': 'Atelier individuel',
+      'couple': 'Atelier en couple',
+      'group': 'Atelier en groupe',
       'home': 'Suivi à domicile',
       'free': 'Libre'
     };
@@ -388,9 +388,9 @@ END:VCALENDAR`;
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { id: 'individual', label: 'Séance individuelle', description: 'Un accompagnement personnalisé pour vous et votre bébé', icon: '1.png' },
-                { id: 'couple', label: 'Séance en couple', description: 'Apprenez ensemble les techniques de portage', icon: '2.png' },
-                { id: 'group', label: 'Ateliers en groupe', description: 'Partagez cette expérience avec d\'autres parents', icon: '3.png' },
+                { id: 'individual', label: 'Atelier individuel', description: 'Un accompagnement personnalisé pour vous et votre bébé', icon: '1.png' },
+                { id: 'couple', label: 'Atelier en couple', description: 'Apprenez ensemble les techniques de portage', icon: '2.png' },
+                { id: 'group', label: 'Atelier en groupe', description: 'Partagez cette expérience avec d\'autres parents', icon: '3.png' },
                 { id: 'home', label: 'Suivi à domicile', description: 'Je me déplace chez vous pour un accompagnement sur mesure', icon: 'coeur.png' }
               ].map((category) => (
                 <div

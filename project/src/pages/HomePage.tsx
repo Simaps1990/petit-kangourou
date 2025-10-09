@@ -119,7 +119,7 @@ function HomePage() {
                   href="/reservation"
                   className="px-8 py-4 bg-[#fff1ee] text-[#c27275] rounded-full font-semibold hover:bg-white transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl text-center"
                 >
-                  Réserver une consultation
+                  Réserver un atelier
                 </a>
               </div>
             </div>
