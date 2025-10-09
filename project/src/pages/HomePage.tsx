@@ -126,7 +126,7 @@ function HomePage() {
             <div className="relative animate-float">
               <div className="w-full h-96 lg:h-[500px] rounded-3xl overflow-hidden shadow-2xl transform rotate-3 hover:rotate-1 transition-transform duration-500">
                 <img 
-                  src="/home.png" 
+                  src="/paola.jpg" 
                   alt="Portage bébé" 
                   className="w-full h-full object-cover"
                 />
