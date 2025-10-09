@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, MessageCircle } from 'lucide-react';
+import { Send, MessageCircle, Shield } from 'lucide-react';
 import { emailService } from '../lib/email';
 
 function ContactPage() {
@@ -12,6 +12,7 @@ function ContactPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [captchaChecked, setCaptchaChecked] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,11 +149,25 @@ function ContactPage() {
                 />
               </div>
 
+              <div className="flex items-center gap-3 p-4 border-2 border-[#c27275]/20 rounded-lg bg-[#fff1ee]/30">
+                <input
+                  type="checkbox"
+                  id="captcha-contact"
+                  checked={captchaChecked}
+                  onChange={(e) => setCaptchaChecked(e.target.checked)}
+                  className="w-5 h-5 text-[#c27275] border-[#c27275]/30 rounded focus:ring-[#c27275]"
+                />
+                <label htmlFor="captcha-contact" className="flex items-center gap-2 text-[#c27275] font-medium cursor-pointer">
+                  <Shield className="h-5 w-5" />
+                  Je ne suis pas un robot
+                </label>
+              </div>
+
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !captchaChecked}
                 className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-300 ${
-                  isSubmitting 
+                  isSubmitting || !captchaChecked
                     ? 'bg-[#c27275]/50 cursor-not-allowed' 
                     : 'bg-[#c27275] hover:bg-[#c27275] transform hover:scale-[1.02]'
                 } shadow-lg hover:shadow-xl`}

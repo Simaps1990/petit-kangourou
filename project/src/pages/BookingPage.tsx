@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Mail, Phone, Baby, Check, Search, Download } from 'lucide-react';
+import { User, Mail, Phone, Baby, Check, Search, Download, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { emailService } from '../lib/email';
 
@@ -46,6 +46,7 @@ function BookingPage() {
   const [searchCode, setSearchCode] = useState('');
   const [foundBooking, setFoundBooking] = useState<Booking | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [captchaChecked, setCaptchaChecked] = useState(false);
 
   useEffect(() => {
     loadTimeSlots();
@@ -567,6 +568,20 @@ END:VCALENDAR`;
                 />
               </div>
 
+              <div className="flex items-center gap-3 p-4 border-2 border-[#c27275]/20 rounded-lg bg-[#fff1ee]/30">
+                <input
+                  type="checkbox"
+                  id="captcha-booking"
+                  checked={captchaChecked}
+                  onChange={(e) => setCaptchaChecked(e.target.checked)}
+                  className="w-5 h-5 text-[#c27275] border-[#c27275]/30 rounded focus:ring-[#c27275]"
+                />
+                <label htmlFor="captcha-booking" className="flex items-center gap-2 text-[#c27275] font-medium cursor-pointer">
+                  <Shield className="h-5 w-5" />
+                  Je ne suis pas un robot
+                </label>
+              </div>
+
               <div className="flex gap-4">
                 <button
                   type="button"
@@ -577,7 +592,12 @@ END:VCALENDAR`;
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-[#c27275] text-white rounded-lg font-semibold hover:bg-[#c27275] transition-colors"
+                  disabled={!captchaChecked}
+                  className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
+                    !captchaChecked
+                      ? 'bg-[#c27275]/50 text-white cursor-not-allowed'
+                      : 'bg-[#c27275] text-white hover:bg-[#c27275]'
+                  }`}
                 >
                   Confirmer la réservation
                 </button>
