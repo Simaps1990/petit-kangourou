@@ -112,12 +112,14 @@ function BookingPage() {
     setStep('slot');
     // Recharger les créneaux pour avoir les données à jour
     await loadTimeSlots();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSlotSelect = (slot: TimeSlot) => {
     setSelectedSlot(slot);
     setSpotsRequested(1); // Réinitialiser à 1 place
     setStep('details');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const getCategoryLabel = (category: string): string => {
@@ -194,6 +196,7 @@ function BookingPage() {
     
     setBooking(newBooking);
     setStep('confirmation');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Envoyer les emails de confirmation (ne pas bloquer si erreur)
     emailService.sendBookingConfirmation({
@@ -219,6 +222,7 @@ function BookingPage() {
   };
 
   const handleSearchBooking = async () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     const { data, error } = await supabase
       .from('bookings')
       .select('*')
@@ -315,7 +319,10 @@ END:VCALENDAR`;
         <div className="flex justify-center mb-8">
           <div className="flex bg-white rounded-full p-1 shadow-lg">
             <button
-              onClick={() => setStep('category')}
+              onClick={() => {
+                setStep('category');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-6 py-2 rounded-full transition-all duration-300 ${
                 step !== 'search' ? 'bg-[#c27275] text-white' : 'text-[#c27275] hover:bg-[#fff1ee]'
               }`}
@@ -323,7 +330,10 @@ END:VCALENDAR`;
               Nouvelle réservation
             </button>
             <button
-              onClick={() => setStep('search')}
+              onClick={() => {
+                setStep('search');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className={`px-6 py-2 rounded-full transition-all duration-300 ${
                 step === 'search' ? 'bg-[#c27275] text-white' : 'text-[#c27275] hover:bg-[#fff1ee]'
               }`}
@@ -589,7 +599,10 @@ END:VCALENDAR`;
               <div className="flex gap-4">
                 <button
                   type="button"
-                  onClick={() => setStep('slot')}
+                  onClick={() => {
+                    setStep('slot');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
                   className="flex-1 py-3 bg-gray-200 text-[#c27275] rounded-lg font-semibold hover:bg-gray-300 transition-colors"
                 >
                   Retour
