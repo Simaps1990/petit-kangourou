@@ -508,15 +508,35 @@ END:VCALENDAR`;
 
                 <div>
                   <label className="block text-[#c27275] font-medium mb-2">Âge de bébé</label>
-                  <div className="relative">
-                    <Baby className="absolute left-3 top-3 h-5 w-5 text-[#c27275]/50" />
-                    <input
-                      type="text"
-                      value={clientDetails.babyAge}
-                      onChange={(e) => setClientDetails({...clientDetails, babyAge: e.target.value})}
-                      className="w-full pl-10 pr-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
-                      placeholder="ex: 3 mois"
-                    />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Baby className="absolute left-3 top-3 h-5 w-5 text-[#c27275]/50" />
+                      <select
+                        value={clientDetails.babyAge.split(' ')[0] || ''}
+                        onChange={(e) => {
+                          const unit = clientDetails.babyAge.split(' ')[1] || 'mois';
+                          setClientDetails({...clientDetails, babyAge: `${e.target.value} ${unit}`});
+                        }}
+                        className="w-full pl-10 pr-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent appearance-none bg-white"
+                      >
+                        <option value="">Nombre</option>
+                        {Array.from({ length: 100 }, (_, i) => i + 1).map(num => (
+                          <option key={num} value={num}>{num}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <select
+                      value={clientDetails.babyAge.split(' ')[1] || 'mois'}
+                      onChange={(e) => {
+                        const number = clientDetails.babyAge.split(' ')[0] || '';
+                        setClientDetails({...clientDetails, babyAge: `${number} ${e.target.value}`});
+                      }}
+                      className="flex-1 px-4 py-3 border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent appearance-none bg-white"
+                    >
+                      <option value="jour(s)">jour(s)</option>
+                      <option value="mois">mois</option>
+                      <option value="an(s)">an(s)</option>
+                    </select>
                   </div>
                 </div>
 

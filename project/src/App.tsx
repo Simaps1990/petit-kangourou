@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Baby, Calendar, MessageCircle, HelpCircle } from 'lucide-react';
+import { Menu, X, Baby, Calendar, MessageCircle, HelpCircle, Instagram } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
@@ -145,7 +145,7 @@ function Footer() {
   return (
     <footer className="bg-[#c27275] text-white">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <h3 className="text-lg font-bold mb-4">{settings.siteName}</h3>
             <p className="text-sm opacity-80">
@@ -153,20 +153,20 @@ function Footer() {
             </p>
           </div>
           <div>
-            <h3 className="font-semibold mb-4">Mes accompagnements</h3>
-            <ul className="space-y-2 text-sm opacity-80">
-              <li>Séance individuelle</li>
-              <li>Séance en couple</li>
-              <li>Ateliers en groupe</li>
-              <li>Suivi à domicile</li>
-            </ul>
-          </div>
-          <div>
             <h3 className="font-semibold mb-4">Contact</h3>
             <div className="space-y-2 text-sm opacity-80">
               <p>📍 {settings.address}</p>
               <p>📧 {settings.contactEmail}</p>
               <p>📞 {settings.contactPhone}</p>
+              <a 
+                href="https://www.instagram.com/paola_petit_kangourou" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:opacity-100 transition-opacity"
+              >
+                <Instagram className="h-4 w-4" />
+                @paola_petit_kangourou
+              </a>
             </div>
           </div>
         </div>
