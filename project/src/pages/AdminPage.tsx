@@ -928,12 +928,13 @@ function AdminPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-[#c27275] mb-2">Catégories (cochez les types d'ateliers concernés)</label>
-                    <div className="space-y-2">
+                    <div className="flex flex-wrap gap-4">
                       {[
                         { id: 'individual', label: 'Atelier individuel' },
                         { id: 'couple', label: 'Atelier en couple' },
                         { id: 'group', label: 'Atelier en groupe' },
-                        { id: 'home', label: 'Suivi à domicile' }
+                        { id: 'home', label: 'Suivi à domicile' },
+                        { id: 'premium', label: 'Pack Premium' }
                       ].map((cat) => (
                         <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
                           <input
@@ -1004,6 +1005,7 @@ function AdminPage() {
                                   {cat === 'couple' && 'Couple'}
                                   {cat === 'group' && 'Groupe'}
                                   {cat === 'home' && 'Domicile'}
+                                  {cat === 'premium' && 'Premium'}
                                 </span>
                               ))}
                             </div>

@@ -123,7 +123,8 @@ function BookingPage() {
       'individual': 'Atelier individuel',
       'couple': 'Atelier en couple',
       'group': 'Atelier en groupe',
-      'home': 'Suivi à domicile'
+      'home': 'Suivi à domicile',
+      'premium': 'Pack Premium'
     };
     return labels[category] || category;
   };
@@ -391,7 +392,8 @@ END:VCALENDAR`;
                 { id: 'individual', label: 'Atelier individuel', description: 'Un accompagnement personnalisé pour vous et votre bébé', icon: '1.png' },
                 { id: 'couple', label: 'Atelier en couple', description: 'Apprenez ensemble les techniques de portage', icon: '2.png' },
                 { id: 'group', label: 'Atelier en groupe', description: 'Partagez cette expérience avec d\'autres parents', icon: '3.png' },
-                { id: 'home', label: 'Suivi à domicile', description: 'Je me déplace chez vous pour un accompagnement sur mesure', icon: 'coeur.png' }
+                { id: 'home', label: 'Suivi à domicile', description: 'Je me déplace chez vous pour un accompagnement sur mesure', icon: 'coeur.png' },
+                { id: 'premium', label: 'Pack Premium', description: 'Un accompagnement complet et personnalisé pour maîtriser le portage', icon: 'etoile.png' }
               ].map((category) => (
                 <div
                   key={category.id}
