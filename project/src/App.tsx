@@ -159,10 +159,13 @@ function Footer() {
                 <MapPin className="h-4 w-4" />
                 {settings.address}
               </div>
-              <div className="flex items-center gap-2">
+              <a 
+                href={`mailto:${settings.contactEmail}`}
+                className="flex items-center gap-2 hover:opacity-100 transition-opacity"
+              >
                 <Mail className="h-4 w-4" />
                 {settings.contactEmail}
-              </div>
+              </a>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
                 {settings.contactPhone}
