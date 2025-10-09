@@ -433,31 +433,53 @@ END:VCALENDAR`;
               <p className="text-[#c27275]/70">Catégorie sélectionnée: {getCategoryLabel(selectedCategory)}</p>
             </div>
 
-            <div className="space-y-6">
-              {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available && slot.categories.includes(selectedCategory)))).map(([date, slots]) => (
-                <div key={date} className="border-b border-[#fff1ee] pb-4">
-                  <h3 className="font-semibold text-[#c27275] mb-3 capitalize">
-                    {formatDate(date)}
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {slots.map((slot) => {
-                      const spotsLeft = slot.maxSpots - slot.bookedSpots;
-                      return (
-                        <button
-                          key={slot.id}
-                          onClick={() => handleSlotSelect(slot)}
-                          className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium flex flex-col items-center gap-1"
-                        >
-                          <span className="text-lg">{slot.time}</span>
-                          {slot.address && <span className="text-xs opacity-70">{slot.address}</span>}
-                          <span className="text-xs opacity-70">{spotsLeft} place{spotsLeft > 1 ? 's' : ''}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+            {timeSlots.filter(slot => slot.available && slot.categories.includes(selectedCategory)).length === 0 ? (
+              <div className="text-center py-12">
+                <div className="bg-[#fff1ee] rounded-lg p-8 max-w-md mx-auto">
+                  <p className="text-[#c27275] text-lg font-medium mb-2">
+                    Aucun créneau de {getCategoryLabel(selectedCategory).toLowerCase()} disponible actuellement
+                  </p>
+                  <p className="text-[#c27275]/70 text-sm">
+                    Veuillez réessayer ultérieurement ou choisir une autre catégorie.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setStep('category');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="mt-4 px-6 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 transition-colors"
+                  >
+                    Retour aux catégories
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available && slot.categories.includes(selectedCategory)))).map(([date, slots]) => (
+                  <div key={date} className="border-b border-[#fff1ee] pb-4">
+                    <h3 className="font-semibold text-[#c27275] mb-3 capitalize">
+                      {formatDate(date)}
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {slots.map((slot) => {
+                        const spotsLeft = slot.maxSpots - slot.bookedSpots;
+                        return (
+                          <button
+                            key={slot.id}
+                            onClick={() => handleSlotSelect(slot)}
+                            className="p-3 bg-[#fff1ee] hover:bg-[#c27275] hover:text-white text-[#c27275] rounded-lg transition-all duration-300 font-medium flex flex-col items-center gap-1"
+                          >
+                            <span className="text-lg">{slot.time}</span>
+                            {slot.address && <span className="text-xs opacity-70">{slot.address}</span>}
+                            <span className="text-xs opacity-70">{spotsLeft} place{spotsLeft > 1 ? 's' : ''}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
