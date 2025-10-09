@@ -393,7 +393,7 @@ END:VCALENDAR`;
                 { id: 'couple', label: 'Atelier en couple', description: 'Apprenez ensemble les techniques de portage', icon: '2.png' },
                 { id: 'group', label: 'Atelier en groupe', description: 'Partagez cette expérience avec d\'autres parents', icon: '3.png' },
                 { id: 'home', label: 'Suivi à domicile', description: 'Je me déplace chez vous pour un accompagnement sur mesure', icon: 'coeur.png' },
-                { id: 'premium', label: 'Pack Premium', description: 'Un accompagnement complet et personnalisé pour maîtriser le portage', icon: 'etoile.png' }
+                { id: 'premium', label: 'Pack Premium', description: 'Un accompagnement complet et personnalisé pour maîtriser le portage', icon: 'star.png' }
               ].map((category) => (
                 <div
                   key={category.id}

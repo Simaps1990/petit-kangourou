@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Calendar, Plus, Trash2, CreditCard as Edit, Clock, BookOpen, Package, HelpCircle, Save, X, Settings, CheckCircle, AlertCircle, MapPin } from 'lucide-react';
+import { Eye, EyeOff, Calendar, Plus, Trash2, Pencil, Clock, BookOpen, Package, HelpCircle, Save, X, Settings, CheckCircle, AlertCircle, MapPin } from 'lucide-react';
 import { authService } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 
@@ -972,7 +972,7 @@ function AdminPage() {
                     >
                       {editingSlot ? (
                         <>
-                          <Edit className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                           Modifier le créneau
                         </>
                       ) : (
@@ -1036,7 +1036,7 @@ function AdminPage() {
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                           title="Modifier"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => toggleSlotAvailability(slot.id)}
@@ -1169,7 +1169,7 @@ function AdminPage() {
                           }}
                           className="p-1 text-[#c27275] hover:bg-[#fff1ee] rounded"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => deleteService(service.id)}
@@ -1227,7 +1227,7 @@ function AdminPage() {
                           }}
                           className="p-1 text-[#c27275] hover:bg-[#fff1ee] rounded"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => deleteBlogPost(post.id)}
@@ -1274,7 +1274,7 @@ function AdminPage() {
                           }}
                           className="p-1 text-[#c27275] hover:bg-[#fff1ee] rounded"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => deleteFaq(faq.id)}
