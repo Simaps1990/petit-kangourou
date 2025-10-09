@@ -14,6 +14,8 @@ interface TimeSlot {
   address: string;
 }
 
+
+
 interface Booking {
   id: string;
   serviceId: string;
