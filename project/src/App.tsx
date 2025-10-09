@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Menu, X, Baby, Calendar, MessageCircle, HelpCircle, Instagram } from 'lucide-react';
+import { Menu, X, Baby, Calendar, MessageCircle, HelpCircle, Instagram, MapPin, Mail, Phone } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
@@ -155,9 +155,18 @@ function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Contact</h3>
             <div className="space-y-2 text-sm opacity-80">
-              <p>📍 {settings.address}</p>
-              <p>📧 {settings.contactEmail}</p>
-              <p>📞 {settings.contactPhone}</p>
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                {settings.address}
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                {settings.contactEmail}
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4" />
+                {settings.contactPhone}
+              </div>
               <a 
                 href="https://www.instagram.com/paola_petit_kangourou" 
                 target="_blank" 
