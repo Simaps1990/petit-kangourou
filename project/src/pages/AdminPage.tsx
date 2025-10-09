@@ -26,7 +26,7 @@ interface TimeSlot {
   available: boolean;
   maxSpots: number;
   bookedSpots: number;
-  category?: string;
+  categories?: string[];
   address?: string;
 }
 
@@ -96,7 +96,7 @@ function AdminPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
-  const [newSlot, setNewSlot] = useState({ date: '', time: '', maxSpots: 1, address: '', category: 'individual' });
+  const [newSlot, setNewSlot] = useState({ date: '', time: '', maxSpots: 1, address: '', categories: [] as string[] });
   const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
@@ -220,7 +220,7 @@ function AdminPage() {
         available: slot.available,
         maxSpots: slot.max_spots,
         bookedSpots: slot.booked_spots,
-        category: slot.category,
+        categories: slot.categories || [],
         address: slot.address
       }));
       
@@ -338,20 +338,20 @@ function AdminPage() {
           time: newSlot.time,
           max_spots: newSlot.maxSpots,
           address: newSlot.address || '',
-          category: newSlot.category
+          categories: newSlot.categories
         })
         .eq('id', editingSlot.id);
       
       if (!error) {
         await loadTimeSlots();
-        setNewSlot({ date: '', time: '', maxSpots: 1, address: '', category: 'individual' });
+        setNewSlot({ date: '', time: '', maxSpots: 1, address: '', categories: [] });
         setEditingSlot(null);
       } else {
         alert('Erreur lors de la modification du créneau');
       }
     } else {
       // Mode création
-      if (newSlot.date && newSlot.time) {
+      if (newSlot.date && newSlot.time && newSlot.categories.length > 0) {
         const slotId = `${newSlot.date}-${newSlot.time}`;
         
         const { error } = await supabase
@@ -364,15 +364,17 @@ function AdminPage() {
             max_spots: newSlot.maxSpots,
             booked_spots: 0,
             address: newSlot.address || '',
-            category: newSlot.category
+            categories: newSlot.categories
           }]);
         
         if (!error) {
           await loadTimeSlots();
-          setNewSlot({ date: '', time: '', maxSpots: 1, address: '', category: 'individual' });
+          setNewSlot({ date: '', time: '', maxSpots: 1, address: '', categories: [] });
         } else {
           alert('Erreur lors de l\'ajout du créneau');
         }
+      } else if (newSlot.categories.length === 0) {
+        alert('Veuillez sélectionner au moins une catégorie');
       }
     }
   };
@@ -925,26 +927,38 @@ function AdminPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#c27275] mb-1">Catégorie</label>
-                    <select
-                      value={newSlot.category}
-                      onChange={(e) => setNewSlot({...newSlot, category: e.target.value})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
-                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
-                    >
-                      <option value="individual">Séance individuelle</option>
-                      <option value="couple">Séance en couple</option>
-                      <option value="group">Ateliers en groupe</option>
-                      <option value="home">Suivi à domicile</option>
-                      <option value="free">Libre</option>
-                    </select>
+                    <label className="block text-sm font-medium text-[#c27275] mb-2">Catégories (cochez les types d'ateliers concernés)</label>
+                    <div className="space-y-2">
+                      {[
+                        { id: 'individual', label: 'Atelier individuel' },
+                        { id: 'couple', label: 'Atelier en couple' },
+                        { id: 'group', label: 'Atelier en groupe' },
+                        { id: 'home', label: 'Suivi à domicile' }
+                      ].map((cat) => (
+                        <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={newSlot.categories.includes(cat.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewSlot({...newSlot, categories: [...newSlot.categories, cat.id]});
+                              } else {
+                                setNewSlot({...newSlot, categories: newSlot.categories.filter(c => c !== cat.id)});
+                              }
+                            }}
+                            className="w-4 h-4 text-[#c27275] border-[#c27275]/20 rounded focus:ring-[#c27275]"
+                          />
+                          <span className="text-sm text-[#c27275]">{cat.label}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     {editingSlot && (
                       <button
                         onClick={() => {
                           setEditingSlot(null);
-                          setNewSlot({ date: '', time: '', maxSpots: 1, address: '', category: 'individual' });
+                          setNewSlot({ date: '', time: '', maxSpots: 1, address: '', categories: [] });
                         }}
                         className="flex-1 px-4 py-2 bg-gray-200 text-[#c27275] rounded-lg hover:bg-gray-300"
                       >
@@ -980,15 +994,18 @@ function AdminPage() {
                         <div className="font-semibold text-[#c27275]">{formatDate(slot.date)}</div>
                         <div className="text-xs text-[#c27275]/60 mt-2 mb-1">Heure</div>
                         <div className="text-lg font-bold">{slot.time}</div>
-                        {slot.category && (
+                        {slot.categories && slot.categories.length > 0 && (
                           <>
-                            <div className="text-xs text-[#c27275]/60 mt-2 mb-1">Type</div>
-                            <div className="text-sm font-medium text-[#c27275]">
-                              {slot.category === 'individual' && 'Séance individuelle'}
-                              {slot.category === 'couple' && 'Séance en couple'}
-                              {slot.category === 'group' && 'Ateliers en groupe'}
-                              {slot.category === 'home' && 'Suivi à domicile'}
-                              {slot.category === 'free' && 'Libre'}
+                            <div className="text-xs text-[#c27275]/60 mt-2 mb-1">Types d'ateliers</div>
+                            <div className="text-sm font-medium text-[#c27275] flex flex-wrap gap-1">
+                              {slot.categories.map(cat => (
+                                <span key={cat} className="px-2 py-1 bg-[#fff1ee] rounded text-xs">
+                                  {cat === 'individual' && 'Individuel'}
+                                  {cat === 'couple' && 'Couple'}
+                                  {cat === 'group' && 'Groupe'}
+                                  {cat === 'home' && 'Domicile'}
+                                </span>
+                              ))}
                             </div>
                           </>
                         )}
@@ -1011,7 +1028,7 @@ function AdminPage() {
                               time: slot.time,
                               maxSpots: slot.maxSpots,
                               address: slot.address || '',
-                              category: slot.category || 'individual'
+                              categories: slot.categories || []
                             });
                           }}
                           className="p-1 text-blue-600 hover:bg-blue-50 rounded"

@@ -10,7 +10,7 @@ interface TimeSlot {
   available: boolean;
   maxSpots: number;
   bookedSpots: number;
-  category: string;
+  categories: string[];
   address: string;
 }
 
@@ -78,7 +78,7 @@ function BookingPage() {
         available: slot.available,
         maxSpots: slot.max_spots,
         bookedSpots: slot.booked_spots,
-        category: slot.category || 'free',
+        categories: slot.categories || [],
         address: slot.address || ''
       }));
       
@@ -122,8 +122,7 @@ function BookingPage() {
       'individual': 'Atelier individuel',
       'couple': 'Atelier en couple',
       'group': 'Atelier en groupe',
-      'home': 'Suivi à domicile',
-      'free': 'Libre'
+      'home': 'Suivi à domicile'
     };
     return labels[category] || category;
   };
@@ -420,7 +419,7 @@ END:VCALENDAR`;
             </div>
 
             <div className="space-y-6">
-              {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available && (slot.category === selectedCategory || slot.category === 'free')))).map(([date, slots]) => (
+              {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available && slot.categories.includes(selectedCategory)))).map(([date, slots]) => (
                 <div key={date} className="border-b border-[#fff1ee] pb-4">
                   <h3 className="font-semibold text-[#c27275] mb-3 capitalize">
                     {formatDate(date)}
