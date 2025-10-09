@@ -399,7 +399,7 @@ END:VCALENDAR`;
         {/* Step 1: Category Selection */}
         {step === 'category' && (
           <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 justify-items-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
               {[
                 { id: 'individual', label: 'Atelier individuel', description: 'Un accompagnement personnalisé pour vous et votre bébé', icon: '1.png' },
                 { id: 'couple', label: 'Atelier en couple', description: 'Apprenez ensemble les techniques de portage', icon: '2.png' },
@@ -410,7 +410,7 @@ END:VCALENDAR`;
                 <div
                   key={category.id}
                   onClick={() => handleCategorySelect(category.id)}
-                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl cursor-pointer transform hover:-translate-y-2 transition-all duration-300 border border-transparent hover:border-[#c27275]/20"
+                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl cursor-pointer transform hover:-translate-y-2 transition-all duration-300 border border-transparent hover:border-[#c27275]/20 w-full max-w-sm"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 bg-[#c27275] rounded-lg flex items-center justify-center flex-shrink-0">
