@@ -387,7 +387,7 @@ END:VCALENDAR`;
         {/* Step 1: Category Selection */}
         {step === 'category' && (
           <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 justify-items-center">
               {[
                 { id: 'individual', label: 'Atelier individuel', description: 'Un accompagnement personnalisé pour vous et votre bébé', icon: '1.png' },
                 { id: 'couple', label: 'Atelier en couple', description: 'Apprenez ensemble les techniques de portage', icon: '2.png' },
