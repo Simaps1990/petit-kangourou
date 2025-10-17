@@ -144,15 +144,17 @@ function BookingPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const getCategoryLabel = (category: string): string => {
-    const labels: Record<string, string> = {
-      'individual': 'Atelier individuel',
-      'couple': 'Atelier en couple',
-      'group': 'Atelier en groupe',
-      'home': 'Suivi à domicile',
-      'premium': 'Pack Premium'
-    };
-    return labels[category] || category;
+  const getCategoryLabel = (categoryId: string): string => {
+    // Trouver le service correspondant par son ID
+    const service = services.find(s => s.id === categoryId);
+    return service ? service.title : categoryId;
+  };
+
+  const getPreposition = (text: string): string => {
+    // Retourne "d'" si le texte commence par une voyelle, sinon "de"
+    const firstChar = text.charAt(0).toLowerCase();
+    const vowels = ['a', 'e', 'i', 'o', 'u', 'y'];
+    return vowels.includes(firstChar) ? "d'" : 'de';
   };
 
   const handleSubmitBooking = async (e: React.FormEvent) => {
@@ -462,7 +464,7 @@ END:VCALENDAR`;
               <div className="text-center py-12">
                 <div className="bg-[#fff1ee] rounded-lg p-8 max-w-md mx-auto">
                   <p className="text-[#c27275] text-lg font-medium mb-2">
-                    Aucun créneau de {getCategoryLabel(selectedCategory).toLowerCase()} disponible actuellement
+                    Aucun créneau {getPreposition(getCategoryLabel(selectedCategory))}{getCategoryLabel(selectedCategory).toLowerCase()} disponible actuellement
                   </p>
                   <p className="text-[#c27275]/70 text-sm">
                     Veuillez réessayer ultérieurement ou choisir une autre catégorie.
