@@ -1156,10 +1156,6 @@ function AdminPage() {
                       <div>
                         <h3 className="font-semibold text-[#c27275] text-lg">{service.title}</h3>
                         <p className="text-[#c27275]/70 mb-2">{service.description}</p>
-                        <div className="flex gap-4 text-sm">
-                          <span className="font-semibold text-[#c27275]">{service.price}</span>
-                          <span className="text-[#c27275]/70">{service.duration}</span>
-                        </div>
                       </div>
                       <div className="flex gap-1">
                         <button
@@ -1448,35 +1444,22 @@ function AdminPage() {
                   await saveService({
                     title: formData.get('title') as string,
                     description: formData.get('description') as string,
-                    price: formData.get('price') as string,
-                    duration: formData.get('duration') as string,
+                    price: '',
+                    duration: '',
                     icon: formData.get('icon') as string,
                     maxSpots: parseInt(formData.get('maxSpots') as string),
                     type: formData.get('type') as 'individual' | 'group'
                   });
                 }} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[#c27275] font-medium mb-2">Titre *</label>
-                      <input
-                        name="title"
-                        type="text"
-                        required
-                        defaultValue={editingService?.title}
-                        className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[#c27275] font-medium mb-2">Prix *</label>
-                      <input
-                        name="price"
-                        type="text"
-                        required
-                        defaultValue={editingService?.price}
-                        placeholder="60€"
-                        className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-[#c27275] font-medium mb-2">Titre *</label>
+                    <input
+                      name="title"
+                      type="text"
+                      required
+                      defaultValue={editingService?.title}
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
+                    />
                   </div>
                   
                   <div>
@@ -1489,30 +1472,17 @@ function AdminPage() {
                     />
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-[#c27275] font-medium mb-2">Durée *</label>
-                      <input
-                        name="duration"
-                        type="text"
-                        required
-                        defaultValue={editingService?.duration}
-                        placeholder="1h30"
-                        className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[#c27275] font-medium mb-2">Places max *</label>
-                      <input
-                        name="maxSpots"
-                        type="number"
-                        min="1"
-                        max="20"
-                        required
-                        defaultValue={editingService?.maxSpots || 1}
-                        className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-[#c27275] font-medium mb-2">Places max *</label>
+                    <input
+                      name="maxSpots"
+                      type="number"
+                      min="1"
+                      max="20"
+                      required
+                      defaultValue={editingService?.maxSpots || 1}
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg"
+                    />
                   </div>
                   
                   <div>
