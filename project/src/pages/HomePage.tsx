@@ -165,10 +165,7 @@ function HomePage() {
                       <div className="w-8 h-8 bg-[#c27275] rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
                         <img src={`/${service.icon}`} alt={service.title} className="h-6 w-6 brightness-0 invert" />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xl font-bold text-[#c27275]">{service.title}</h3>
-                        <span className="text-sm text-[#c27275]/50">{service.duration}</span>
-                      </div>
+                      <h3 className="text-xl font-bold text-[#c27275]">{service.title}</h3>
                     </div>
                     <p className="text-[#c27275]/70 mb-4">{service.description}</p>
                   </div>
@@ -182,7 +179,7 @@ function HomePage() {
       {/* Testimonials Section */}
       <section className="py-20 bg-gradient-to-r from-[#fff1ee] to-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-[#c27275] mb-12">
+          <h2 className="text-4xl lg:text-5xl font-bold text-[#c27275] mb-12">
             Témoignages de parents
           </h2>
           

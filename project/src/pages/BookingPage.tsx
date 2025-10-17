@@ -439,9 +439,9 @@ END:VCALENDAR`;
                       <h3 className="text-xl font-bold text-[#c27275]">{service.title}</h3>
                     </div>
                     <p className="text-[#c27275]/70 mb-3">{description}</p>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-[#c27275] font-semibold">{service.price}</span>
-                      <span className="text-[#c27275]/50">{service.duration}</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg text-[#c27275] font-bold">{service.price}</span>
+                      <span className="text-base text-[#c27275]/50">{service.duration}</span>
                     </div>
                   </div>
                 );
