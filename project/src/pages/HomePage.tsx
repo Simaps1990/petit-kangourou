@@ -176,6 +176,31 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Professional Quote Section */}
+      <section className="py-20 bg-[#c27275] text-white">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-4xl lg:text-5xl font-bold mb-6">
+              Devis pour les professionnels
+            </h2>
+            <div className="text-lg leading-relaxed space-y-4 text-white/90">
+              <p>
+                Vous êtes un professionnel de la petite enfance (assistante maternelle, crèche, PMI, auxiliaire de puériculture…) et souhaitez vous former au portage physiologique ?
+              </p>
+              <p>
+                Je propose des formations et ateliers sur mesure, adaptés aux besoins de votre structure et de votre équipe.
+              </p>
+              <p>
+                Je peux également intervenir pour former les parents au sein de votre établissement.
+              </p>
+              <p className="font-semibold">
+                Discutons ensemble de votre projet — je vous proposerai un accompagnement sur mesure et un devis adapté.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
       <section className="py-20 bg-gradient-to-r from-[#fff1ee] to-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
