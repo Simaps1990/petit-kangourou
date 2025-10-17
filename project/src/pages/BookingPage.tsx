@@ -130,7 +130,8 @@ function BookingPage() {
   };
 
   const handleCategorySelect = async (category: string) => {
-    console.log('🎯 Catégorie sélectionnée:', category, 'Type:', typeof category);
+    const categoryIdentifier = getCategoryIdentifier(category);
+    console.log('🎯 Service sélectionné:', category, '-> Identifiant:', categoryIdentifier);
     setSelectedCategory(category);
     setStep('slot');
     // Recharger les créneaux pour avoir les données à jour
@@ -149,6 +150,22 @@ function BookingPage() {
     // Trouver le service correspondant par son ID
     const service = services.find(s => s.id === categoryId);
     return service ? service.title : categoryId;
+  };
+
+  const getCategoryIdentifier = (serviceId: string): string => {
+    // Mapper l'ID du service vers l'identifiant utilisé dans les créneaux
+    const service = services.find(s => s.id === serviceId);
+    if (!service) return serviceId;
+    
+    // Extraire un identifiant basé sur le titre du service
+    const title = service.title.toLowerCase();
+    if (title.includes('individuel')) return 'individual';
+    if (title.includes('couple')) return 'couple';
+    if (title.includes('groupe')) return 'group';
+    if (title.includes('domicile')) return 'home';
+    if (title.includes('premium')) return 'premium';
+    
+    return serviceId;
   };
 
   const getPreposition = (text: string): string => {
@@ -462,11 +479,13 @@ END:VCALENDAR`;
             </div>
 
             {(() => {
+              const categoryIdentifier = getCategoryIdentifier(selectedCategory);
               const filteredSlots = timeSlots.filter(slot => {
-                console.log('🔍 Créneau:', slot.id, 'Categories:', slot.categories, 'Includes?', slot.categories.includes(selectedCategory));
-                return slot.available && slot.categories.includes(selectedCategory);
+                const hasCategory = slot.categories.includes(categoryIdentifier);
+                console.log('🔍 Créneau:', slot.id, 'Categories:', slot.categories, 'Cherche:', categoryIdentifier, 'Trouvé?', hasCategory);
+                return slot.available && hasCategory;
               });
-              console.log('📊 Créneaux filtrés pour catégorie', selectedCategory, ':', filteredSlots.length);
+              console.log('📊 Créneaux filtrés pour', selectedCategory, '(', categoryIdentifier, '):', filteredSlots.length);
               return filteredSlots.length === 0;
             })() ? (
               <div className="text-center py-12">
@@ -490,7 +509,7 @@ END:VCALENDAR`;
               </div>
             ) : (
               <div className="space-y-6">
-                {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available && slot.categories.includes(selectedCategory)))).map(([date, slots]) => (
+                {Object.entries(groupSlotsByDate(timeSlots.filter(slot => slot.available && slot.categories.includes(getCategoryIdentifier(selectedCategory))))).map(([date, slots]) => (
                   <div key={date} className="border-b border-[#fff1ee] pb-4">
                     <h3 className="font-semibold text-[#c27275] mb-3 capitalize">
                       {formatDate(date)}
