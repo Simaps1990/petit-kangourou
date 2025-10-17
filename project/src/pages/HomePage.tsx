@@ -185,16 +185,13 @@ function HomePage() {
             </h2>
             <div className="text-lg leading-relaxed space-y-4 text-white/90">
               <p>
-                Vous êtes un professionnel de la petite enfance (assistante maternelle, crèche, PMI, auxiliaire de puériculture…) et souhaitez vous former au portage physiologique ?
+                Vous êtes professionnel de la petite enfance (assistante maternelle, crèche, PMI, auxiliaire de puériculture…) et souhaitez vous former au portage physiologique ?
               </p>
               <p>
                 Je propose des formations et ateliers sur mesure, adaptés aux besoins de votre structure et de votre équipe.
               </p>
               <p>
-                Je peux également intervenir pour former les parents au sein de votre établissement.
-              </p>
-              <p className="font-semibold">
-                Discutons ensemble de votre projet — je vous proposerai un accompagnement sur mesure et un devis adapté.
+Contactez-moi pour obtenir un devis sur-mesure.
               </p>
             </div>
           </div>

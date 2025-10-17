@@ -212,19 +212,27 @@ function AdminPage() {
     if (data) {
       console.log('📊 Créneaux reçus:', data.length, data);
       
-      // Créer un nouveau tableau pour forcer le re-render
-      const newSlots = data.map(slot => ({
-        id: slot.id,
-        date: slot.date,
-        time: slot.time,
-        available: slot.available,
-        maxSpots: slot.max_spots,
-        bookedSpots: slot.booked_spots,
-        categories: slot.categories || [],
-        address: slot.address
-      }));
+      const now = new Date();
       
-      console.log('✅ Créneaux mappés:', newSlots);
+      // Créer un nouveau tableau pour forcer le re-render et filtrer les créneaux passés
+      const newSlots = data
+        .map(slot => ({
+          id: slot.id,
+          date: slot.date,
+          time: slot.time,
+          available: slot.available,
+          maxSpots: slot.max_spots,
+          bookedSpots: slot.booked_spots,
+          categories: slot.categories || [],
+          address: slot.address
+        }))
+        .filter(slot => {
+          // Vérifier si le créneau n'est pas passé
+          const slotDateTime = new Date(`${slot.date}T${slot.time}:00`);
+          return slotDateTime > now;
+        });
+      
+      console.log('✅ Créneaux mappés et filtrés:', newSlots.length);
       setTimeSlots(newSlots);
     } else {
       console.log('⚠️ Aucune donnée reçue');

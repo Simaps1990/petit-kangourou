@@ -130,6 +130,7 @@ function BookingPage() {
   };
 
   const handleCategorySelect = async (category: string) => {
+    console.log('🎯 Catégorie sélectionnée:', category, 'Type:', typeof category);
     setSelectedCategory(category);
     setStep('slot');
     // Recharger les créneaux pour avoir les données à jour
@@ -460,7 +461,14 @@ END:VCALENDAR`;
               <p className="text-[#c27275]/70">Catégorie sélectionnée: {getCategoryLabel(selectedCategory)}</p>
             </div>
 
-            {timeSlots.filter(slot => slot.available && slot.categories.includes(selectedCategory)).length === 0 ? (
+            {(() => {
+              const filteredSlots = timeSlots.filter(slot => {
+                console.log('🔍 Créneau:', slot.id, 'Categories:', slot.categories, 'Includes?', slot.categories.includes(selectedCategory));
+                return slot.available && slot.categories.includes(selectedCategory);
+              });
+              console.log('📊 Créneaux filtrés pour catégorie', selectedCategory, ':', filteredSlots.length);
+              return filteredSlots.length === 0;
+            })() ? (
               <div className="text-center py-12">
                 <div className="bg-[#fff1ee] rounded-lg p-8 max-w-md mx-auto">
                   <p className="text-[#c27275] text-lg font-medium mb-2">
