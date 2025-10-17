@@ -16,6 +16,15 @@ interface TimeSlot {
 
 
 
+interface Service {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  duration: string;
+  icon: string;
+}
+
 interface Booking {
   id: string;
   serviceId: string;
@@ -48,11 +57,24 @@ function BookingPage() {
   const [searchCode, setSearchCode] = useState('');
   const [foundBooking, setFoundBooking] = useState<Booking | null>(null);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [captchaChecked, setCaptchaChecked] = useState(false);
 
   useEffect(() => {
     loadTimeSlots();
+    loadServices();
   }, []);
+
+  const loadServices = async () => {
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('id', { ascending: true });
+    
+    if (data && !error) {
+      setServices(data);
+    }
+  };
 
   const loadTimeSlots = async () => {
     const { data, error } = await supabase
@@ -400,27 +422,30 @@ END:VCALENDAR`;
         {step === 'category' && (
           <div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-              {[
-                { id: 'individual', label: 'Atelier individuel', description: 'Un accompagnement personnalisé pour vous et votre bébé', icon: '1.png' },
-                { id: 'couple', label: 'Atelier en couple', description: 'Apprenez ensemble les techniques de portage', icon: '2.png' },
-                { id: 'group', label: 'Atelier en groupe', description: 'Partagez cette expérience avec d\'autres parents', icon: '3.png' },
-                { id: 'home', label: 'Suivi à domicile', description: 'Je me déplace chez vous pour un accompagnement sur mesure', icon: 'coeur.png' },
-                { id: 'premium', label: 'Pack Premium', description: 'Un accompagnement complet et personnalisé pour maîtriser le portage', icon: 'star.png' }
-              ].map((category) => (
-                <div
-                  key={category.id}
-                  onClick={() => handleCategorySelect(category.id)}
-                  className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl cursor-pointer transform hover:-translate-y-2 transition-all duration-300 border border-transparent hover:border-[#c27275]/20 w-full max-w-sm"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 bg-[#c27275] rounded-lg flex items-center justify-center flex-shrink-0">
-                      <img src={`/${category.icon}`} alt={category.label} className="h-6 w-6 brightness-0 invert" />
+              {services.map((service) => {
+                // Ajouter un point à la fin de la description si elle n'en a pas
+                const description = service.description.endsWith('.') ? service.description : service.description + '.';
+                
+                return (
+                  <div
+                    key={service.id}
+                    onClick={() => handleCategorySelect(service.id)}
+                    className="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl cursor-pointer transform hover:-translate-y-2 transition-all duration-300 border border-transparent hover:border-[#c27275]/20 w-full max-w-sm"
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 bg-[#c27275] rounded-lg flex items-center justify-center flex-shrink-0">
+                        <img src={`/${service.icon}`} alt={service.title} className="h-6 w-6 brightness-0 invert" />
+                      </div>
+                      <h3 className="text-xl font-bold text-[#c27275]">{service.title}</h3>
                     </div>
-                    <h3 className="text-xl font-bold text-[#c27275]">{category.label}</h3>
+                    <p className="text-[#c27275]/70 mb-3">{description}</p>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-[#c27275] font-semibold">{service.price}</span>
+                      <span className="text-[#c27275]/50">{service.duration}</span>
+                    </div>
                   </div>
-                  <p className="text-[#c27275]/70">{category.description}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
