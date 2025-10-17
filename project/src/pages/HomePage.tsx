@@ -178,7 +178,7 @@ function HomePage() {
 
       {/* Professional Quote Section */}
       <section className="py-20 bg-[#c27275] text-white">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-4xl lg:text-5xl font-bold mb-6">
               Devis pour les professionnels
