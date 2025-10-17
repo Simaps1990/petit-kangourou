@@ -1444,8 +1444,8 @@ function AdminPage() {
                   await saveService({
                     title: formData.get('title') as string,
                     description: formData.get('description') as string,
-                    price: '',
-                    duration: '',
+                    price: editingService?.price || '',
+                    duration: editingService?.duration || '',
                     icon: formData.get('icon') as string,
                     maxSpots: parseInt(formData.get('maxSpots') as string),
                     type: formData.get('type') as 'individual' | 'group'
