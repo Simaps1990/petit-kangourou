@@ -214,6 +214,8 @@ function AdminPage() {
       
       const now = new Date();
       
+
+      
       // Créer un nouveau tableau pour forcer le re-render et filtrer les créneaux passés
       const newSlots = data
         .map(slot => ({
