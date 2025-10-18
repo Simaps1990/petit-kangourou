@@ -40,6 +40,9 @@ export const handler: Handler = async (event) => {
       success_url: `${process.env.URL || 'http://localhost:5173'}/reservation?success=true&booking_id=${bookingId}`,
       cancel_url: `${process.env.URL || 'http://localhost:5173'}/reservation?canceled=true`,
       customer_email: clientEmail,
+      payment_intent_data: {
+        receipt_email: clientEmail, // Envoyer automatiquement le reçu par email
+      },
       metadata: {
         bookingId,
         clientName,

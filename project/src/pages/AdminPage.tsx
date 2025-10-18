@@ -896,8 +896,9 @@ function AdminPage() {
                       type="date"
                       value={newSlot.date}
                       onChange={(e) => setNewSlot({...newSlot, date: e.target.value})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border cursor-pointer"
                       style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                      onClick={(e) => e.currentTarget.showPicker && e.currentTarget.showPicker()}
                     />
                   </div>
                   <div>
@@ -906,8 +907,9 @@ function AdminPage() {
                       type="time"
                       value={newSlot.time}
                       onChange={(e) => setNewSlot({...newSlot, time: e.target.value})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
+                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border cursor-pointer"
                       style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
+                      onClick={(e) => e.currentTarget.showPicker && e.currentTarget.showPicker()}
                     />
                   </div>
                   <div>

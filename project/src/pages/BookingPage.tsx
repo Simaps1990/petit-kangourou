@@ -67,6 +67,21 @@ function BookingPage() {
   useEffect(() => {
     loadTimeSlots();
     loadServices();
+    
+    // Vérifier si on revient de Stripe
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const canceled = urlParams.get('canceled');
+    const bookingId = urlParams.get('booking_id');
+    
+    if (success === 'true' && bookingId) {
+      // Charger la réservation et afficher la confirmation
+      loadBookingAfterPayment(bookingId);
+    } else if (canceled === 'true') {
+      // Paiement annulé
+      alert('Paiement annulé. Votre réservation n\'a pas été confirmée.');
+      window.history.replaceState({}, '', '/reservation');
+    }
   }, []);
 
   const loadServices = async () => {
@@ -264,6 +279,71 @@ function BookingPage() {
   const handleCGVAccept = () => {
     setCgvAccepted(true);
     setShowCGV(false);
+  };
+
+  const loadBookingAfterPayment = async (bookingId: string) => {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .single();
+    
+    if (data && !error) {
+      // Mettre à jour le statut à "confirmed" si le paiement est réussi
+      await supabase
+        .from('bookings')
+        .update({ status: 'confirmed' })
+        .eq('id', bookingId);
+      
+      // Récupérer le prix du service
+      const service = services.find(s => s.id === data.service_id);
+      const price = service?.price || '';
+      
+      // Mapper les données pour l'affichage
+      const bookingData: Booking = {
+        id: data.id,
+        serviceId: data.service_id,
+        serviceName: data.service_name,
+        date: data.date,
+        time: data.time,
+        address: data.address || '',
+        clientName: data.client_name,
+        clientEmail: data.client_email,
+        clientPhone: data.client_phone,
+        babyAge: data.baby_age,
+        notes: data.notes,
+        status: 'confirmed',
+        createdAt: data.created_at
+      };
+      
+      setBooking(bookingData);
+      setStep('confirmation');
+      
+      // Envoyer les emails de confirmation
+      emailService.sendBookingConfirmation({
+        clientName: data.client_name,
+        clientEmail: data.client_email,
+        serviceName: data.service_name,
+        date: formatDate(data.date),
+        time: data.time,
+        bookingCode: data.id,
+        price: price
+      }).catch(err => console.log('Info: Email client non envoyé', err));
+
+      // Envoyer notification admin
+      emailService.sendAdminNotification({
+        clientName: data.client_name,
+        clientEmail: data.client_email,
+        serviceName: data.service_name,
+        date: formatDate(data.date),
+        time: data.time,
+        bookingCode: data.id,
+        price: price
+      }).catch(err => console.log('Info: Email admin non envoyé', err));
+      
+      // Nettoyer l'URL
+      window.history.replaceState({}, '', '/reservation');
+    }
   };
 
   const handleSearchBooking = async () => {
@@ -730,6 +810,9 @@ END:VCALENDAR`;
                 <Check className="h-8 w-8 text-green-600" />
               </div>
               <h2 className="text-3xl font-bold text-[#c27275] mb-2">Réservation confirmée !</h2>
+              <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4 inline-block">
+                <p className="text-green-700 font-semibold text-lg">✅ Votre paiement a bien été effectué</p>
+              </div>
               <p className="text-[#c27275]/70">Votre consultation a été enregistrée avec succès</p>
             </div>
 
