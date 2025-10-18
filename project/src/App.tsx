@@ -151,9 +151,7 @@ function Footer() {
             <p className="text-sm opacity-80">
               {settings.siteDescription}
             </p>
-            <p className="text-sm opacity-80 mt-2 italic">
-              Il ne remplace en aucun cas un avis médical ou l'expertise d'un professionnel de santé.
-            </p>
+
           </div>
           <div>
             <h3 className="font-semibold mb-4">Contact</h3>
