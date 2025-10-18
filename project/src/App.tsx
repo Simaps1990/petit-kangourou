@@ -8,6 +8,7 @@ import ContactPage from './pages/ContactPage';
 import FAQPage from './pages/FAQPage';
 import LegalPage from './pages/LegalPage';
 import AdminPage from './pages/AdminPage';
+import CookieConsent from './components/CookieConsent';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -218,6 +219,7 @@ function App() {
           </Routes>
         </main>
         <Footer />
+        <CookieConsent />
       </div>
     </Router>
   );
