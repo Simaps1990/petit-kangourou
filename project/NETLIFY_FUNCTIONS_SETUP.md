@@ -4,6 +4,7 @@
 
 L'envoi d'emails depuis le navigateur causait une erreur CORS car Resend ne peut pas être appelé directement depuis le frontend.
 
+
 ## ✅ Solution : Netlify Functions
 
 Les emails sont maintenant envoyés via une fonction serverless Netlify qui appelle Resend de manière sécurisée.
