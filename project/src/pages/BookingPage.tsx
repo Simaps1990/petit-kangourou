@@ -295,6 +295,24 @@ function BookingPage() {
         .update({ status: 'confirmed' })
         .eq('id', bookingId);
       
+      // Trouver le créneau correspondant et mettre à jour les places réservées
+      const { data: slotData } = await supabase
+        .from('time_slots')
+        .select('*')
+        .eq('date', data.date)
+        .eq('time', data.time)
+        .single();
+      
+      if (slotData) {
+        // Incrémenter le nombre de places réservées
+        await supabase
+          .from('time_slots')
+          .update({ 
+            booked_spots: (slotData.booked_spots || 0) + (data.spots_reserved || 1)
+          })
+          .eq('id', slotData.id);
+      }
+      
       // Récupérer le prix du service
       const service = services.find(s => s.id === data.service_id);
       const price = service?.price || '';
