@@ -176,9 +176,6 @@ function BookingPage() {
     const service = services.find(s => s.id === serviceId);
     if (!service) return serviceId;
     
-    // Si c'est le service de test, retourner directement son ID
-    if (serviceId === '999-test') return '999-test';
-    
     // Extraire un identifiant basé sur le titre du service
     const title = service.title.toLowerCase();
     if (title.includes('individuel')) return 'individual';
@@ -401,34 +398,56 @@ function BookingPage() {
     const startDate = new Date(`${booking.date}T${booking.time}`);
     const endDate = new Date(startDate.getTime() + 90 * 60000); // +1h30
     
+    // Utiliser l'adresse réelle du créneau ou une adresse par défaut
+    const location = booking.address || 'Versailles, France';
+    
     const event = {
       title: `Consultation Portage - ${booking.serviceName}`,
       start: startDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z',
       end: endDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z',
-      description: `Rendez-vous avec Paola - Portage Douceur\\nService: ${booking.serviceName}\\nClient: ${booking.clientName}`,
-      location: 'Versailles, France'
+      description: `Rendez-vous avec Paola - Petit Kangourou\\nService: ${booking.serviceName}\\nCode réservation: ${booking.id}`,
+      location: location
     };
 
     const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Portage Douceur//Booking//FR
+PRODID:-//Petit Kangourou//Booking//FR
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
 BEGIN:VEVENT
-UID:${booking.id}@portagedouceur.fr
+UID:${booking.id}@petitkangourou.fr
 DTSTART:${event.start}
 DTEND:${event.end}
 SUMMARY:${event.title}
 DESCRIPTION:${event.description}
 LOCATION:${event.location}
+STATUS:CONFIRMED
+SEQUENCE:0
+BEGIN:VALARM
+TRIGGER:-PT24H
+DESCRIPTION:Rappel: Consultation Portage demain
+ACTION:DISPLAY
+END:VALARM
 END:VEVENT
 END:VCALENDAR`;
 
-    const blob = new Blob([icsContent], { type: 'text/calendar' });
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `rdv-portage-${booking.id}.ics`;
+    
+    // Pour mobile: ouvrir directement au lieu de télécharger
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      a.target = '_blank';
+    }
+    
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
+    // Nettoyer après un délai pour permettre le téléchargement
+    setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
   const formatDate = (dateStr: string) => {
