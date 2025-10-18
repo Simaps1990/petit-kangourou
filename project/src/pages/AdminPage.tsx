@@ -816,6 +816,12 @@ function AdminPage() {
                             <div>
                               <div className="font-medium">{booking.clientName}</div>
                               <div className="text-sm text-[#c27275]/70">{booking.clientEmail}</div>
+                              <div className="text-sm text-[#c27275]/70">{booking.clientPhone}</div>
+                              {booking.notes && (
+                                <div className="text-sm text-[#c27275] mt-1 italic bg-yellow-50 p-2 rounded">
+                                  📝 {booking.notes}
+                                </div>
+                              )}
                             </div>
                           </td>
                           <td className="py-3 px-4">{booking.serviceName}</td>

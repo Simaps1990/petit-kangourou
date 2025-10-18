@@ -15,6 +15,7 @@ interface BookingEmailData {
   time: string;
   bookingCode: string;
   price: string;
+  notes?: string;
 }
 
 interface ContactEmailData {
@@ -64,6 +65,7 @@ export const emailService = {
                 <p><strong>Date :</strong> ${data.date}</p>
                 <p><strong>Heure :</strong> ${data.time}</p>
                 <p><strong>Tarif à régler sur place :</strong> ${data.price}</p>
+                ${data.notes ? `<p><strong>Vos notes :</strong> ${data.notes}</p>` : ''}
               </div>
               
               <p><strong>Que faut-il prévoir ?</strong></p>
@@ -121,6 +123,7 @@ export const emailService = {
                 <p><strong>Service :</strong> ${data.serviceName}</p>
                 <p><strong>Date :</strong> ${data.date} à ${data.time}</p>
                 <p><strong>Tarif :</strong> ${data.price}</p>
+                ${data.notes ? `<p><strong>Notes du client :</strong> ${data.notes}</p>` : ''}
               </div>
               <p><a href="${window.location.origin}/admin" style="display: inline-block; padding: 10px 20px; background-color: #c27275; color: white; text-decoration: none; border-radius: 5px;">Voir dans l'admin</a></p>
             </div>

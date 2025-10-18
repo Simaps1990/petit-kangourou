@@ -327,7 +327,8 @@ function BookingPage() {
         date: formatDate(data.date),
         time: data.time,
         bookingCode: data.id,
-        price: price
+        price: price,
+        notes: data.notes
       }).catch(err => console.log('Info: Email client non envoyé', err));
 
       // Envoyer notification admin
@@ -338,7 +339,8 @@ function BookingPage() {
         date: formatDate(data.date),
         time: data.time,
         bookingCode: data.id,
-        price: price
+        price: price,
+        notes: data.notes
       }).catch(err => console.log('Info: Email admin non envoyé', err));
       
       // Nettoyer l'URL
