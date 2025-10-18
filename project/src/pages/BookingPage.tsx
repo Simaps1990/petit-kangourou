@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Baby, Check, Search, Download, Shield } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { emailService } from '../lib/email';
+import CGVModal from '../components/CGVModal';
 
 interface TimeSlot {
   id: string;
@@ -59,6 +60,9 @@ function BookingPage() {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [captchaChecked, setCaptchaChecked] = useState(false);
+  const [showCGV, setShowCGV] = useState(false);
+  const [cgvAccepted, setCgvAccepted] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     loadTimeSlots();
@@ -179,88 +183,84 @@ function BookingPage() {
     e.preventDefault();
     
     if (!selectedCategory || !selectedSlot) return;
-
-    const bookingId = generateBookingCode();
-    const newBooking: Booking = {
-      id: bookingId,
-      serviceId: selectedCategory,
-      serviceName: getCategoryLabel(selectedCategory),
-      date: selectedSlot.date,
-      time: selectedSlot.time,
-      address: selectedSlot.address,
-      clientName: clientDetails.name,
-      clientEmail: clientDetails.email,
-      clientPhone: clientDetails.phone,
-      babyAge: clientDetails.babyAge,
-      notes: clientDetails.notes,
-      status: 'confirmed',
-      createdAt: new Date().toISOString()
-    };
-
-    // Sauvegarder dans Supabase
-    const { error: insertError } = await supabase
-      .from('bookings')
-      .insert([{
-        id: bookingId,
-        service_id: selectedCategory,
-        service_name: getCategoryLabel(selectedCategory),
-        date: selectedSlot.date,
-        time: selectedSlot.time,
-        client_name: clientDetails.name,
-        client_email: clientDetails.email,
-        client_phone: clientDetails.phone,
-        baby_age: clientDetails.babyAge,
-        notes: clientDetails.notes,
-        status: 'confirmed',
-        spots_reserved: spotsRequested
-      }]);
-
-    if (insertError) {
-      console.error('Erreur sauvegarde réservation:', insertError);
-      alert('Erreur lors de la réservation. Veuillez réessayer.');
+    
+    // Vérifier que les CGV sont acceptées
+    if (!cgvAccepted) {
+      setShowCGV(true);
       return;
     }
 
-    // Mettre à jour le nombre de places réservées dans le créneau
-    const { error: updateError } = await supabase
-      .from('time_slots')
-      .update({ 
-        booked_spots: selectedSlot.bookedSpots + spotsRequested 
-      })
-      .eq('id', selectedSlot.id);
+    setIsProcessingPayment(true);
 
-    if (updateError) {
-      console.error('Erreur mise à jour créneau:', updateError);
+    try {
+      const bookingId = generateBookingCode();
+      
+      // Trouver le service pour obtenir le prix
+      const service = services.find(s => s.id === selectedCategory);
+      if (!service) {
+        alert('Service introuvable');
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      // Créer la session de paiement Stripe
+      const response = await fetch('/.netlify/functions/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          serviceName: getCategoryLabel(selectedCategory),
+          price: service.price,
+          bookingId,
+          clientEmail: clientDetails.email,
+          clientName: clientDetails.name,
+        }),
+      });
+
+      const { url, error } = await response.json();
+
+      if (error || !url) {
+        throw new Error(error || 'Erreur lors de la création de la session de paiement');
+      }
+
+      // Sauvegarder la réservation avec statut "pending" avant la redirection
+      const { error: insertError } = await supabase
+        .from('bookings')
+        .insert([{
+          id: bookingId,
+          service_id: selectedCategory,
+          service_name: getCategoryLabel(selectedCategory),
+          date: selectedSlot.date,
+          time: selectedSlot.time,
+          client_name: clientDetails.name,
+          client_email: clientDetails.email,
+          client_phone: clientDetails.phone,
+          baby_age: clientDetails.babyAge,
+          notes: clientDetails.notes,
+          status: 'pending',
+          spots_reserved: spotsRequested
+        }]);
+
+      if (insertError) {
+        console.error('Erreur sauvegarde réservation:', insertError);
+        alert('Erreur lors de la réservation. Veuillez réessayer.');
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      // Rediriger vers Stripe Checkout
+      window.location.href = url;
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue. Veuillez réessayer.');
+      setIsProcessingPayment(false);
     }
-    
-    // Recharger les créneaux pour mettre à jour l'affichage
-    await loadTimeSlots();
-    
-    setBooking(newBooking);
-    setStep('confirmation');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    // Envoyer les emails de confirmation (ne pas bloquer si erreur)
-    emailService.sendBookingConfirmation({
-      clientName: clientDetails.name,
-      clientEmail: clientDetails.email,
-      serviceName: getCategoryLabel(selectedCategory),
-      date: formatDate(selectedSlot.date),
-      time: selectedSlot.time,
-      bookingCode: bookingId,
-      price: ''
-    }).catch(err => console.log('Info: Email client non envoyé', err));
-
-    // Envoyer notification admin (ne pas bloquer si erreur)
-    emailService.sendAdminNotification({
-      clientName: clientDetails.name,
-      clientEmail: clientDetails.email,
-      serviceName: getCategoryLabel(selectedCategory),
-      date: formatDate(selectedSlot.date),
-      time: selectedSlot.time,
-      bookingCode: bookingId,
-      price: ''
-    }).catch(err => console.log('Info: Email admin non envoyé', err));
+  const handleCGVAccept = () => {
+    setCgvAccepted(true);
+    setShowCGV(false);
   };
 
   const handleSearchBooking = async () => {
@@ -672,6 +672,26 @@ END:VCALENDAR`;
                 </label>
               </div>
 
+              <div className="flex items-center gap-3 p-4 border-2 border-[#c27275]/20 rounded-lg bg-[#fff1ee]/30">
+                <input
+                  type="checkbox"
+                  id="cgv-acceptance"
+                  checked={cgvAccepted}
+                  onChange={(e) => setCgvAccepted(e.target.checked)}
+                  className="w-5 h-5 text-[#c27275] border-[#c27275]/30 rounded focus:ring-[#c27275]"
+                />
+                <label htmlFor="cgv-acceptance" className="text-[#c27275] font-medium cursor-pointer">
+                  J'accepte les{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowCGV(true)}
+                    className="text-[#c27275] underline hover:text-[#c27275]/80"
+                  >
+                    Conditions Générales de Vente
+                  </button>
+                </label>
+              </div>
+
               <div className="flex gap-4">
                 <button
                   type="button"
@@ -685,14 +705,14 @@ END:VCALENDAR`;
                 </button>
                 <button
                   type="submit"
-                  disabled={!captchaChecked}
+                  disabled={!captchaChecked || !cgvAccepted || isProcessingPayment}
                   className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-                    !captchaChecked
+                    !captchaChecked || !cgvAccepted || isProcessingPayment
                       ? 'bg-[#c27275]/50 text-white cursor-not-allowed'
                       : 'bg-[#c27275] text-white hover:bg-[#c27275]'
                   }`}
                 >
-                  Confirmer la réservation
+                  {isProcessingPayment ? 'Redirection vers le paiement...' : 'Procéder au paiement'}
                 </button>
               </div>
             </form>
@@ -756,6 +776,13 @@ END:VCALENDAR`;
           </div>
         )}
       </div>
+
+      {/* CGV Modal */}
+      <CGVModal
+        isOpen={showCGV}
+        onClose={() => setShowCGV(false)}
+        onAccept={handleCGVAccept}
+      />
     </div>
   );
 }
