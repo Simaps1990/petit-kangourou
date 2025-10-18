@@ -944,7 +944,8 @@ function AdminPage() {
                         { id: 'couple', label: 'Atelier en couple' },
                         { id: 'group', label: 'Atelier en groupe' },
                         { id: 'home', label: 'Suivi à domicile' },
-                        { id: 'premium', label: 'Pack Premium' }
+                        { id: 'premium', label: 'Pack Premium' },
+                        { id: '999-test', label: '🧪 TEST - Service à 1€' }
                       ].map((cat) => (
                         <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
                           <input

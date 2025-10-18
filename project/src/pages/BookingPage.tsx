@@ -161,6 +161,9 @@ function BookingPage() {
     const service = services.find(s => s.id === serviceId);
     if (!service) return serviceId;
     
+    // Si c'est le service de test, retourner directement son ID
+    if (serviceId === '999-test') return '999-test';
+    
     // Extraire un identifiant basé sur le titre du service
     const title = service.title.toLowerCase();
     if (title.includes('individuel')) return 'individual';
