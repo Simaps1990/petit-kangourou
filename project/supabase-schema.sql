@@ -81,6 +81,13 @@ CREATE TABLE site_settings (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
 
+-- Table invisible pour maintenir Supabase actif (keep-alive)
+-- Cette table est utilisée par un cron job pour éviter la désactivation après 7 jours d'inactivité
+CREATE TABLE _keepalive (
+  id TEXT PRIMARY KEY DEFAULT 'ping',
+  last_ping TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
 -- Créer des index pour améliorer les performances
 CREATE INDEX idx_bookings_date ON bookings(date);
 CREATE INDEX idx_bookings_email ON bookings(client_email);
@@ -95,6 +102,7 @@ ALTER TABLE time_slots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE faqs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE _keepalive ENABLE ROW LEVEL SECURITY;
 
 -- Politiques de sécurité : Lecture publique
 CREATE POLICY "Public read access for services" ON services FOR SELECT USING (true);
@@ -106,6 +114,9 @@ CREATE POLICY "Public read access for site_settings" ON site_settings FOR SELECT
 -- Politiques de sécurité : Création publique pour les réservations
 CREATE POLICY "Public insert access for bookings" ON bookings FOR INSERT WITH CHECK (true);
 CREATE POLICY "Users can read their own bookings" ON bookings FOR SELECT USING (true);
+
+-- Politique pour la table keepalive : accès public en lecture et mise à jour
+CREATE POLICY "Public access for keepalive" ON _keepalive FOR ALL USING (true) WITH CHECK (true);
 
 -- Fonction pour mettre à jour automatiquement updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()

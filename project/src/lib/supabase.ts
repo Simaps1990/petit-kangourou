@@ -101,6 +101,17 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['site_settings']['Row'], 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['site_settings']['Insert']>;
       };
+      _keepalive: {
+        Row: {
+          id: string;
+          last_ping: string;
+        };
+        Insert: {
+          id?: string;
+          last_ping?: string;
+        };
+        Update: Partial<Database['public']['Tables']['_keepalive']['Insert']>;
+      };
     };
   };
 }
