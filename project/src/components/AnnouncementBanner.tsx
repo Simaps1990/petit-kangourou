@@ -5,6 +5,11 @@ export default function AnnouncementBanner() {
   const [isVisible, setIsVisible] = useState(false);
   const [bannerText, setBannerText] = useState('');
 
+  // Initialiser la variable CSS à 0
+  useEffect(() => {
+    document.documentElement.style.setProperty('--banner-height', '0px');
+  }, []);
+
   useEffect(() => {
     const loadBannerSettings = async () => {
       console.log('🔄 Chargement des paramètres du bandeau...');
