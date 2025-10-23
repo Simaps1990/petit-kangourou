@@ -9,23 +9,40 @@ export default function AnnouncementBanner() {
 
   useEffect(() => {
     const loadBannerSettings = async () => {
+      console.log('🔄 Chargement des paramètres du bandeau...');
       const { data, error } = await supabase
         .from('site_settings')
         .select('banner_enabled, banner_text')
         .eq('id', 'main')
         .single();
       
-      if (data && !error && data.banner_enabled && data.banner_text) {
-        setBannerText(data.banner_text);
+      console.log('📊 Données reçues:', data);
+      console.log('❌ Erreur:', error);
+      
+      if (error) {
+        console.error('Erreur lors du chargement du bandeau:', error);
+        return;
+      }
+      
+      if (data && data.banner_enabled) {
+        console.log('✅ Bandeau activé avec texte:', data.banner_text);
+        setBannerText(data.banner_text || '');
         
         // Vérifier si l'utilisateur a déjà fermé ce bandeau
         const dismissedBanner = sessionStorage.getItem('bannerDismissed');
         const dismissedText = sessionStorage.getItem('bannerText');
         
+        console.log('🔍 Bandeau déjà fermé?', dismissedBanner, 'Texte précédent:', dismissedText);
+        
         // Afficher le bandeau si pas fermé ou si le texte a changé
         if (!dismissedBanner || dismissedText !== data.banner_text) {
+          console.log('👁️ Affichage du bandeau');
           setIsVisible(true);
+        } else {
+          console.log('🚫 Bandeau masqué (déjà fermé)');
         }
+      } else {
+        console.log('⚠️ Bandeau désactivé ou pas de données');
       }
     };
     
@@ -33,6 +50,9 @@ export default function AnnouncementBanner() {
     
     // Écouter les changements de paramètres
     const handleSettingsUpdate = () => {
+      console.log('🔔 Événement settings-updated reçu');
+      sessionStorage.removeItem('bannerDismissed');
+      sessionStorage.removeItem('bannerText');
       loadBannerSettings();
     };
     
