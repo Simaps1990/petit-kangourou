@@ -90,7 +90,9 @@ function AdminPage() {
     siteDescription: 'Monitrice de portage physiologique certifiée à Versailles. Accompagnement personnalisé pour créer un lien unique avec votre bébé.',
     contactEmail: 'contact@portagedouceur.fr',
     contactPhone: '06 XX XX XX XX',
-    address: 'Versailles, France'
+    address: 'Versailles, France',
+    bannerEnabled: false,
+    bannerText: ''
   });
   const [originalSettings, setOriginalSettings] = useState(settings);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -136,7 +138,9 @@ function AdminPage() {
         siteDescription: data.site_description,
         contactEmail: data.contact_email,
         contactPhone: data.contact_phone,
-        address: data.address
+        address: data.address,
+        bannerEnabled: data.banner_enabled || false,
+        bannerText: data.banner_text || ''
       };
       setSettings(loadedSettings);
       setOriginalSettings(loadedSettings);
@@ -152,6 +156,8 @@ function AdminPage() {
         contact_email: settings.contactEmail,
         contact_phone: settings.contactPhone,
         address: settings.address,
+        banner_enabled: settings.bannerEnabled,
+        banner_text: settings.bannerText,
         updated_at: new Date().toISOString()
       })
       .eq('id', 'main');
@@ -1405,6 +1411,66 @@ function AdminPage() {
                   </div>
                   
                   {/* Bouton Sauvegarder */}
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      onClick={saveSettings}
+                      className="px-6 py-3 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 flex items-center gap-2 font-medium transition-colors"
+                    >
+                      <Save className="h-5 w-5" />
+                      Sauvegarder les paramètres
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bandeau d'annonce */}
+                <div className="bg-white rounded-lg shadow p-6 mt-6">
+                  <h3 className="text-lg font-semibold text-[#c27275] mb-4">Bandeau d'annonce</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Affichez un bandeau en haut du site pour communiquer des informations importantes à vos visiteurs.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="bannerEnabled"
+                        checked={settings.bannerEnabled}
+                        onChange={(e) => setSettings({...settings, bannerEnabled: e.target.checked})}
+                        className="w-5 h-5 text-[#c27275] border-gray-300 rounded focus:ring-[#c27275]"
+                      />
+                      <label htmlFor="bannerEnabled" className="text-sm font-medium text-gray-700">
+                        Activer le bandeau d'annonce
+                      </label>
+                    </div>
+                    
+                    {settings.bannerEnabled && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Texte du bandeau
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={settings.bannerText}
+                          onChange={(e) => setSettings({...settings, bannerText: e.target.value})}
+                          placeholder="Ex: 🎉 Offre spéciale : -20% sur tous les ateliers en groupe jusqu'au 31 mars !"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Le bandeau sera affiché en haut de toutes les pages du site.
+                        </p>
+                      </div>
+                    )}
+                    
+                    {settings.bannerEnabled && settings.bannerText && (
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <p className="text-xs font-medium text-gray-700 mb-2">Aperçu :</p>
+                        <div className="bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-3 px-4 rounded-lg">
+                          <p className="text-sm text-center">{settings.bannerText}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
                   <div className="mt-6 flex justify-end">
                     <button
                       onClick={saveSettings}

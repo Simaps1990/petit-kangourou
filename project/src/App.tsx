@@ -9,6 +9,7 @@ import FAQPage from './pages/FAQPage';
 import LegalPage from './pages/LegalPage';
 import AdminPage from './pages/AdminPage';
 import CookieConsent from './components/CookieConsent';
+import AnnouncementBanner from './components/AnnouncementBanner';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -32,7 +33,7 @@ function Navigation() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-[#fff1ee]/95 backdrop-blur-sm z-50 border-b border-[#fff1ee]">
+    <nav className="fixed top-0 left-0 right-0 bg-[#fff1ee]/95 backdrop-blur-sm z-50 border-b border-[#fff1ee] mt-0">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center space-x-2">
@@ -207,6 +208,7 @@ function App() {
     <Router>
       <ScrollToTop />
       <div className="min-h-screen bg-white">
+        <AnnouncementBanner />
         <Navigation />
         <main className="pt-16">
           <Routes>

@@ -77,6 +77,8 @@ CREATE TABLE site_settings (
   contact_email TEXT NOT NULL,
   contact_phone TEXT NOT NULL,
   address TEXT NOT NULL,
+  banner_enabled BOOLEAN DEFAULT false,
+  banner_text TEXT DEFAULT '',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
