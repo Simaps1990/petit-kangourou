@@ -234,7 +234,7 @@ function App() {
       <div className="min-h-screen bg-white">
         <Navigation />
         <AnnouncementBanner />
-        <main style={{ marginTop: `${64 + bannerHeight}px`, transition: 'margin-top 0.3s ease' }}>
+        <main className="bg-[#c27275]" style={{ marginTop: `${64 + bannerHeight}px`, transition: 'margin-top 0.3s ease' }}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/reservation" element={<BookingPage />} />
