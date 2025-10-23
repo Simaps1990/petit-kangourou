@@ -67,7 +67,7 @@ export default function AnnouncementBanner() {
   if (!isVisible || location.pathname === '/admin') return null;
 
   return (
-    <div id="announcement-banner" className="fixed left-0 right-0 w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-1 md:py-1.5 px-2 md:px-4 z-40 overflow-hidden relative" style={{ top: '64px' }}>
+    <div id="announcement-banner" className="fixed left-0 right-0 w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-3 md:py-1.5 px-2 md:px-4 shadow-md z-40 overflow-hidden relative" style={{ top: '64px' }}>
       {/* Animation de lueur */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute h-full w-[1280px] bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer"></div>
