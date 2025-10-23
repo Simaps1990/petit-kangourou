@@ -204,37 +204,13 @@ function Footer() {
 }
 
 function App() {
-  const [bannerHeight, setBannerHeight] = useState(0);
-
-  useEffect(() => {
-    const updateBannerHeight = () => {
-      const banner = document.getElementById('announcement-banner');
-      const height = banner ? banner.offsetHeight : 0;
-      setBannerHeight(height);
-      console.log('📏 App - Hauteur bandeau mise à jour:', height, 'px');
-    };
-
-    // Écouter les changements
-    const observer = new MutationObserver(updateBannerHeight);
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // Vérifier périodiquement au début
-    const interval = setInterval(updateBannerHeight, 100);
-    setTimeout(() => clearInterval(interval), 2000);
-
-    return () => {
-      observer.disconnect();
-      clearInterval(interval);
-    };
-  }, []);
-
   return (
     <Router>
       <ScrollToTop />
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen">
         <Navigation />
         <AnnouncementBanner />
-        <main className="bg-[#c27275]" style={{ marginTop: `${64 + bannerHeight}px`, transition: 'margin-top 0.3s ease' }}>
+        <main className="pt-[104px]">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/reservation" element={<BookingPage />} />
