@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export default function AnnouncementBanner() {
   const [isVisible, setIsVisible] = useState(false);
   const [bannerText, setBannerText] = useState('');
+  const location = useLocation();
 
   // Initialiser la variable CSS à 0
   useEffect(() => {
@@ -61,7 +63,8 @@ export default function AnnouncementBanner() {
     };
   }, []);
 
-  if (!isVisible) return null;
+  // Ne pas afficher le bandeau sur la page admin
+  if (!isVisible || location.pathname === '/admin') return null;
 
   return (
     <div id="announcement-banner" className="fixed left-0 right-0 w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-1 md:py-1.5 px-2 md:px-4 z-40 overflow-hidden relative" style={{ top: '64px' }}>
