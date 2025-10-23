@@ -33,7 +33,7 @@ function Navigation() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-[#fff1ee]/95 backdrop-blur-sm z-50 border-b border-[#fff1ee]">
+    <nav className="fixed top-0 left-0 right-0 bg-[#fff1ee]/95 backdrop-blur-sm z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center space-x-2">
@@ -208,9 +208,13 @@ function App() {
 
   useEffect(() => {
     const updateTotalHeight = () => {
-      const banner = document.getElementById('announcement-banner');
-      const bannerHeight = banner ? banner.offsetHeight : 0;
-      setTotalHeaderHeight(bannerHeight + 64); // 64px pour la nav
+      // Attendre un peu pour que le DOM soit mis à jour
+      setTimeout(() => {
+        const banner = document.getElementById('announcement-banner');
+        const bannerHeight = banner ? banner.offsetHeight : 0;
+        setTotalHeaderHeight(bannerHeight + 64); // 64px pour la nav
+        console.log('📏 Hauteur totale header:', bannerHeight + 64, 'px (nav: 64px, bandeau:', bannerHeight, 'px)');
+      }, 50);
     };
 
     // Attendre que le DOM soit prêt

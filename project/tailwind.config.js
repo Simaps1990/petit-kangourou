@@ -5,12 +5,12 @@ export default {
     extend: {
       keyframes: {
         shimmer: {
-          '0%': { transform: 'translateX(0)' },
-          '100%': { transform: 'translateX(calc(100vw + 128px))' }
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(calc(100vw + 100%))' }
         }
       },
       animation: {
-        shimmer: 'shimmer 3s ease-in-out infinite'
+        shimmer: 'shimmer 8s ease-in-out infinite'
       }
     },
   },

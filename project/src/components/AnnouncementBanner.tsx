@@ -52,10 +52,10 @@ export default function AnnouncementBanner() {
   if (!isVisible) return null;
 
   return (
-    <div id="announcement-banner" className="fixed left-0 right-0 w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-1.5 md:py-2 px-2 md:px-4 shadow-md z-40 overflow-hidden relative" style={{ top: '64px' }}>
+    <div id="announcement-banner" className="fixed left-0 right-0 w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-1.5 md:py-2 px-2 md:px-4 z-40 overflow-hidden relative" style={{ top: '64px' }}>
       {/* Animation de lueur */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute h-full w-32 bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer" style={{ left: '-128px' }}></div>
+      <div className="absolute inset-0 opacity-15">
+        <div className="absolute h-full w-[1280px] bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer"></div>
       </div>
       
       <div className="max-w-7xl mx-auto relative z-10">
