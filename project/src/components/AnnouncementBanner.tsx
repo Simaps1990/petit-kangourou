@@ -38,11 +38,14 @@ export default function AnnouncementBanner() {
         if (!dismissedBanner || dismissedText !== data.banner_text) {
           console.log('👁️ Affichage du bandeau');
           setIsVisible(true);
+          setTimeout(() => window.dispatchEvent(new Event('banner-changed')), 100);
         } else {
           console.log('🚫 Bandeau masqué (déjà fermé)');
         }
       } else {
         console.log('⚠️ Bandeau désactivé ou pas de données');
+        setIsVisible(false);
+        setTimeout(() => window.dispatchEvent(new Event('banner-changed')), 100);
       }
     };
     
@@ -68,15 +71,16 @@ export default function AnnouncementBanner() {
     setIsVisible(false);
     sessionStorage.setItem('bannerDismissed', 'true');
     sessionStorage.setItem('bannerText', bannerText);
+    setTimeout(() => window.dispatchEvent(new Event('banner-changed')), 100);
   };
 
   if (!isVisible || isDismissed) return null;
 
   return (
-    <div className="w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-3 px-4 shadow-md relative z-40">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        <div className="flex-1 text-center">
-          <p className="text-sm md:text-base font-medium">
+    <div id="announcement-banner" className="fixed left-0 right-0 w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-2 md:py-3 px-2 md:px-4 shadow-md z-40" style={{ top: '64px' }}>
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 md:gap-4">
+        <div className="flex-1 text-center min-w-0">
+          <p className="text-xs md:text-sm lg:text-base font-medium break-words">
             {bannerText}
           </p>
         </div>
@@ -85,7 +89,7 @@ export default function AnnouncementBanner() {
           className="flex-shrink-0 p-1 hover:bg-white/20 rounded-full transition-colors"
           aria-label="Fermer le bandeau"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4 md:h-5 md:w-5" />
         </button>
       </div>
     </div>

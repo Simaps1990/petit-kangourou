@@ -33,7 +33,7 @@ function Navigation() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-[#fff1ee]/95 backdrop-blur-sm z-50 border-b border-[#fff1ee] mt-0">
+    <nav className="fixed top-0 left-0 right-0 bg-[#fff1ee]/95 backdrop-blur-sm z-50 border-b border-[#fff1ee]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center space-x-2">
@@ -204,13 +204,33 @@ function Footer() {
 }
 
 function App() {
+  const [totalHeaderHeight, setTotalHeaderHeight] = useState(64); // 64px = hauteur de la nav par défaut
+
+  useEffect(() => {
+    const updateTotalHeight = () => {
+      const banner = document.getElementById('announcement-banner');
+      const bannerHeight = banner ? banner.offsetHeight : 0;
+      setTotalHeaderHeight(bannerHeight + 64); // 64px pour la nav
+    };
+
+    // Attendre que le DOM soit prêt
+    setTimeout(updateTotalHeight, 100);
+    window.addEventListener('banner-changed', updateTotalHeight);
+    window.addEventListener('resize', updateTotalHeight);
+
+    return () => {
+      window.removeEventListener('banner-changed', updateTotalHeight);
+      window.removeEventListener('resize', updateTotalHeight);
+    };
+  }, []);
+
   return (
     <Router>
       <ScrollToTop />
       <div className="min-h-screen bg-white">
-        <AnnouncementBanner />
         <Navigation />
-        <main className="pt-16">
+        <AnnouncementBanner />
+        <main style={{ paddingTop: `${totalHeaderHeight}px` }}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/reservation" element={<BookingPage />} />
