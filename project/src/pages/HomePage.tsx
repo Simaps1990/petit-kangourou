@@ -317,52 +317,6 @@ Contactez-moi pour obtenir un devis sur-mesure pour votre structure.
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-white/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-24 -right-24 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
       </section>
-
-      {/* SEO Content Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="prose prose-lg max-w-none text-[#c27275]/80">
-            <h2 className="text-3xl font-bold text-[#c27275] mb-6">Portage Physiologique à Versailles et Yvelines</h2>
-            <p className="mb-4">
-              <strong>Petit Kangourou</strong> est votre référence pour le <strong>portage physiologique à Versailles</strong> et dans les <strong>Yvelines (78)</strong>. 
-              En tant que <strong>monitrice de portage certifiée</strong>, je propose des <strong>ateliers de portage bébé</strong> adaptés à tous les parents souhaitant apprendre <strong>comment porter bébé</strong> en toute sécurité.
-            </p>
-            
-            <h3 className="text-2xl font-bold text-[#c27275] mt-8 mb-4">Qu'est-ce que le portage physiologique ?</h3>
-            <p className="mb-4">
-              Le <strong>portage physiologique</strong> respecte la <strong>position physiologique du bébé</strong> : dos arrondi, jambes en position "M", bassin basculé. 
-              Cette <strong>position physiologique portage bebe</strong> favorise le développement des hanches et de la colonne vertébrale. 
-              Que ce soit avec une <strong>écharpe de portage</strong>, un <strong>porte-bébé physiologique</strong> ou le <strong>portage à bras</strong>, je vous apprends les bonnes techniques.
-            </p>
-
-            <h3 className="text-2xl font-bold text-[#c27275] mt-8 mb-4">Ateliers de portage pour parents</h3>
-            <p className="mb-4">
-              Mes <strong>ateliers portage bébé</strong> s'adressent aux futurs et jeunes parents de <strong>Versailles</strong>, <strong>Le Chesnay</strong>, <strong>Saint-Germain-en-Laye</strong>, <strong>Viroflay</strong> et <strong>Paris</strong>. 
-              Apprenez <strong>comment porter un bébé</strong>, <strong>comment porter son bébé</strong> et <strong>comment porter un nourrisson dans ses bras</strong> lors d'un <strong>atelier de portage</strong> personnalisé.
-            </p>
-            <ul className="list-disc pl-6 mb-4">
-              <li><strong>Portage nouveau-né</strong> : dès la naissance</li>
-              <li><strong>Porter bébé dans les bras</strong> : techniques de portage à bras</li>
-              <li><strong>Comment porter un bébé dans les bras</strong> : positions sécuritaires</li>
-              <li>Utilisation de l'<strong>écharpe de portage</strong> et du <strong>porte-bébé physiologique</strong></li>
-            </ul>
-
-            <h3 className="text-2xl font-bold text-[#c27275] mt-8 mb-4">Formation portage en crèche et pour professionnels</h3>
-            <p className="mb-4">
-              Je propose également des formations <strong>le portage en crèche</strong> pour les professionnels de la <strong>petite enfance</strong> : 
-              assistantes maternelles, auxiliaires de puériculture, éducateurs de jeunes enfants. 
-              Ces <strong>ateliers de portage</strong> professionnels permettent d'intégrer le portage dans les pratiques quotidiennes en structure d'accueil.
-            </p>
-
-            <h3 className="text-2xl font-bold text-[#c27275] mt-8 mb-4">Zone d'intervention</h3>
-            <p className="mb-4">
-              Interventions à domicile et en cabinet dans les <strong>Yvelines (78)</strong> : <strong>Versailles</strong>, <strong>Le Chesnay-Rocquencourt</strong>, 
-              <strong>Saint-Germain-en-Laye</strong>, <strong>Viroflay</strong>, <strong>Vélizy-Villacoublay</strong>, <strong>Jouy-en-Josas</strong>, 
-              <strong>Bougival</strong>, <strong>La Celle-Saint-Cloud</strong> et <strong>Paris</strong>.
-            </p>
-          </div>
-        </div>
-      </section>
       
       {/* Blog Post Modal */}
       {selectedPost && (
