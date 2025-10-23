@@ -210,7 +210,7 @@ function App() {
       <div className="min-h-screen">
         <Navigation />
         <AnnouncementBanner />
-        <main className="pt-[104px]">
+        <main className="pt-[10px]">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/reservation" element={<BookingPage />} />
