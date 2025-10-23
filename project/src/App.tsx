@@ -204,37 +204,13 @@ function Footer() {
 }
 
 function App() {
-  const [totalHeaderHeight, setTotalHeaderHeight] = useState(64); // 64px = hauteur de la nav par défaut
-
-  useEffect(() => {
-    const updateTotalHeight = () => {
-      // Attendre un peu pour que le DOM soit mis à jour
-      setTimeout(() => {
-        const banner = document.getElementById('announcement-banner');
-        const bannerHeight = banner ? banner.offsetHeight : 0;
-        setTotalHeaderHeight(bannerHeight + 64); // 64px pour la nav
-        console.log('📏 Hauteur totale header:', bannerHeight + 64, 'px (nav: 64px, bandeau:', bannerHeight, 'px)');
-      }, 50);
-    };
-
-    // Attendre que le DOM soit prêt
-    setTimeout(updateTotalHeight, 100);
-    window.addEventListener('banner-changed', updateTotalHeight);
-    window.addEventListener('resize', updateTotalHeight);
-
-    return () => {
-      window.removeEventListener('banner-changed', updateTotalHeight);
-      window.removeEventListener('resize', updateTotalHeight);
-    };
-  }, []);
-
   return (
     <Router>
       <ScrollToTop />
       <div className="min-h-screen bg-white">
         <Navigation />
         <AnnouncementBanner />
-        <main style={{ paddingTop: `${totalHeaderHeight}px` }}>
+        <main style={{ paddingTop: 'calc(64px + var(--banner-height, 0px))' }}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/reservation" element={<BookingPage />} />

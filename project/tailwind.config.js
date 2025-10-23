@@ -10,7 +10,7 @@ export default {
         }
       },
       animation: {
-        shimmer: 'shimmer 8s ease-in-out infinite'
+        shimmer: 'shimmer 6s ease-in-out infinite'
       }
     },
   },

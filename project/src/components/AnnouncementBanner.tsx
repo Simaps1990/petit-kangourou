@@ -19,6 +19,7 @@ export default function AnnouncementBanner() {
       
       if (error) {
         console.error('Erreur lors du chargement du bandeau:', error);
+        document.documentElement.style.setProperty('--banner-height', '0px');
         return;
       }
       
@@ -26,11 +27,17 @@ export default function AnnouncementBanner() {
         console.log('✅ Bandeau activé avec texte:', data.banner_text);
         setBannerText(data.banner_text || '');
         setIsVisible(true);
-        setTimeout(() => window.dispatchEvent(new Event('banner-changed')), 100);
+        // Attendre que le bandeau soit rendu pour calculer sa hauteur
+        setTimeout(() => {
+          const banner = document.getElementById('announcement-banner');
+          const height = banner ? banner.offsetHeight : 0;
+          document.documentElement.style.setProperty('--banner-height', `${height}px`);
+          console.log('📏 Hauteur bandeau:', height, 'px');
+        }, 100);
       } else {
         console.log('⚠️ Bandeau désactivé ou pas de données');
         setIsVisible(false);
-        setTimeout(() => window.dispatchEvent(new Event('banner-changed')), 100);
+        document.documentElement.style.setProperty('--banner-height', '0px');
       }
     };
     
@@ -54,7 +61,7 @@ export default function AnnouncementBanner() {
   return (
     <div id="announcement-banner" className="fixed left-0 right-0 w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-1.5 md:py-2 px-2 md:px-4 z-40 overflow-hidden relative" style={{ top: '64px' }}>
       {/* Animation de lueur */}
-      <div className="absolute inset-0 opacity-15">
+      <div className="absolute inset-0 opacity-20">
         <div className="absolute h-full w-[1280px] bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer"></div>
       </div>
       
