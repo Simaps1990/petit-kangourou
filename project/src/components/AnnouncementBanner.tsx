@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 export default function AnnouncementBanner() {
   const [isVisible, setIsVisible] = useState(false);
   const [bannerText, setBannerText] = useState('');
+  const [bannerUrl, setBannerUrl] = useState('');
   const location = useLocation();
 
   // Initialiser la variable CSS à 0
@@ -17,7 +18,7 @@ export default function AnnouncementBanner() {
       console.log('🔄 Chargement des paramètres du bandeau...');
       const { data, error } = await supabase
         .from('site_settings')
-        .select('banner_enabled, banner_text')
+        .select('banner_enabled, banner_text, banner_url')
         .eq('id', 'main')
         .single();
       
@@ -33,6 +34,7 @@ export default function AnnouncementBanner() {
       if (data && data.banner_enabled) {
         console.log('✅ Bandeau activé avec texte:', data.banner_text);
         setBannerText(data.banner_text || '');
+        setBannerUrl(data.banner_url || '');
         setIsVisible(true);
         // Attendre que le bandeau soit rendu pour calculer sa hauteur
         setTimeout(() => {
@@ -66,8 +68,8 @@ export default function AnnouncementBanner() {
   // Ne pas afficher le bandeau sur la page admin
   if (!isVisible || location.pathname === '/admin') return null;
 
-  return (
-    <div id="announcement-banner" className="fixed left-0 right-0 w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-3 md:py-1.5 px-2 md:px-4 shadow-md z-40 overflow-hidden relative" style={{ top: '64px' }}>
+  const BannerContent = () => (
+    <>
       {/* Animation de lueur */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute h-full w-[1280px] bg-gradient-to-r from-transparent via-white to-transparent animate-shimmer"></div>
@@ -80,6 +82,27 @@ export default function AnnouncementBanner() {
           </p>
         </div>
       </div>
+    </>
+  );
+
+  const bannerClasses = "fixed left-0 right-0 w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-3 md:py-1.5 px-2 md:px-4 shadow-md z-40 overflow-hidden relative";
+
+  if (bannerUrl) {
+    return (
+      <a 
+        id="announcement-banner" 
+        href={bannerUrl}
+        className={`${bannerClasses} cursor-pointer hover:opacity-95 transition-opacity`}
+        style={{ top: '64px' }}
+      >
+        <BannerContent />
+      </a>
+    );
+  }
+
+  return (
+    <div id="announcement-banner" className={bannerClasses} style={{ top: '64px' }}>
+      <BannerContent />
     </div>
   );
 }

@@ -92,7 +92,8 @@ function AdminPage() {
     contactPhone: '06 XX XX XX XX',
     address: 'Versailles, France',
     bannerEnabled: false,
-    bannerText: ''
+    bannerText: '',
+    bannerUrl: ''
   });
   const [originalSettings, setOriginalSettings] = useState(settings);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -140,7 +141,8 @@ function AdminPage() {
         contactPhone: data.contact_phone,
         address: data.address,
         bannerEnabled: data.banner_enabled || false,
-        bannerText: data.banner_text || ''
+        bannerText: data.banner_text || '',
+        bannerUrl: data.banner_url || ''
       };
       setSettings(loadedSettings);
       setOriginalSettings(loadedSettings);
@@ -158,6 +160,7 @@ function AdminPage() {
         address: settings.address,
         banner_enabled: settings.bannerEnabled,
         banner_text: settings.bannerText,
+        banner_url: settings.bannerUrl,
         updated_at: new Date().toISOString()
       })
       .eq('id', 'main');
@@ -1444,20 +1447,38 @@ function AdminPage() {
                     </div>
                     
                     {settings.bannerEnabled && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Texte du bandeau
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={settings.bannerText}
-                          onChange={(e) => setSettings({...settings, bannerText: e.target.value})}
-                          placeholder="Ex: 🎉 Offre spéciale : -20% sur tous les ateliers en groupe jusqu'au 31 mars !"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Le bandeau sera affiché en haut de toutes les pages du site.
-                        </p>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Texte du bandeau
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={settings.bannerText}
+                            onChange={(e) => setSettings({...settings, bannerText: e.target.value})}
+                            placeholder="Ex: 🎉 Offre spéciale : -20% sur tous les ateliers en groupe jusqu'au 31 mars !"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Le bandeau sera affiché en haut de toutes les pages du site.
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Lien URL (optionnel)
+                          </label>
+                          <input
+                            type="url"
+                            value={settings.bannerUrl}
+                            onChange={(e) => setSettings({...settings, bannerUrl: e.target.value})}
+                            placeholder="Ex: /reservation ou https://exemple.com"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">
+                            Si renseigné, le bandeau sera cliquable et redirigera vers cette URL.
+                          </p>
+                        </div>
                       </div>
                     )}
                     
