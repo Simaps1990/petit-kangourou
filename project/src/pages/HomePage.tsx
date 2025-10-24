@@ -104,15 +104,15 @@ function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 animate-fade-in">
               <h1 className="text-5xl lg:text-7xl font-bold text-white leading-tight">
-                Atelier de Portage Bébé
-                <span className="block text-white">à Versailles</span>
+                Petit
+                <span className="block text-white">Kangourou</span>
               </h1>
               <p className="text-xl text-white/80 leading-relaxed">
-                Monitrice certifiée en portage physiologique à Versailles, Yvelines (78). Interventions à domicile à Versailles, Le Chesnay, Saint-Germain-en-Laye, Viroflay et Paris.
+                Monitrice certifiée en portage physiologique à Versailles.
                 <br />
-                Atelier portage bébé individuel, en couple ou en groupe. Portage nouveau-né, écharpe de portage et portage à bras.
+                Porter votre bébé, c'est lui offrir sécurité, douceur et proximité.
                 <br />
-                Formation portage en crèche pour professionnels de la petite enfance. Apprenez comment porter un bébé en position physiologique.
+                Je vous accompagne pour créer ce lien unique dans le respect de sa physiologie.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a 
@@ -145,10 +145,10 @@ function HomePage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-bold text-[#c27275] mb-6">
-              Ateliers de Portage Bébé
+              Mes accompagnements
             </h2>
             <p className="text-xl text-[#c27275]/70 max-w-3xl mx-auto">
-            Découvrez comment porter un bébé en position physiologique. Ateliers individuels, en couple ou en groupe pour apprendre comment porter son bébé et comment porter un nourrisson dans ses bras en toute sécurité.
+            Apprenez à porter votre bébé en toute confiance grâce à des séances adaptées à vos besoins, à votre rythme, et à celui de votre enfant.
             </p>
           </div>
           
@@ -181,16 +181,16 @@ function HomePage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-8">
             <h2 className="text-4xl lg:text-5xl font-bold mb-6">
-              Le Portage en Crèche et pour les Professionnels
+              Devis pour les professionnels
             </h2>
             <div className="text-lg leading-relaxed space-y-4 text-white/90">
               <p>
-                Vous êtes professionnel de la petite enfance (assistante maternelle, crèche, PMI, auxiliaire de puériculture…) <br/> et souhaitez apprendre le portage en crèche et comment porter bébé dans les bras en position physiologique ?
+                Vous êtes professionnel de la petite enfance (assistante maternelle, crèche, PMI, auxiliaire de puériculture…) <br/> et souhaitez vous former au portage physiologique ?
 <br/>
-                Je propose des ateliers de portage complets à destination des professionnels pour maîtriser le portage à bras et les techniques de portage physiologique.
+                Je propose des ateliers complets à destination des professionnels.
               </p>
               <p>
-Contactez-moi pour obtenir un devis sur-mesure pour votre structure.
+Contactez-moi pour obtenir un devis sur-mesure.
               </p>
             </div>
           </div>
