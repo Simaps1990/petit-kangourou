@@ -85,7 +85,7 @@ export default function AnnouncementBanner() {
     </>
   );
 
-  const bannerClasses = "fixed left-0 right-0 w-full bg-gradient-to-r from-[#c27275] to-[#d88a8d] text-white py-3 md:py-1.5 px-2 md:px-4 shadow-md z-40 overflow-hidden relative";
+  const bannerClasses = "fixed left-0 right-0 w-full bg-gradient-to-r from-[#d88a8d] to-[#e5a5a8] text-white py-3 md:py-1.5 px-2 md:px-4 shadow-md z-40 overflow-hidden relative";
 
   if (bannerUrl) {
     return (
@@ -93,7 +93,7 @@ export default function AnnouncementBanner() {
         id="announcement-banner" 
         href={bannerUrl}
         className={`${bannerClasses} cursor-pointer hover:opacity-95 transition-opacity block no-underline`}
-        style={{ top: '64px', display: 'block', textDecoration: 'none', color: 'inherit' }}
+        style={{ top: '64px', display: 'block', textDecoration: 'none', color: 'white' }}
       >
         <BannerContent />
       </a>
