@@ -75,7 +75,7 @@ export default function AnnouncementBanner() {
       
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="text-center">
-          <p className="text-xs md:text-sm lg:text-base font-medium break-words">
+          <p className="text-sm md:text-sm lg:text-base font-medium break-words">
             {bannerText}
           </p>
         </div>
