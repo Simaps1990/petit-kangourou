@@ -92,8 +92,8 @@ export default function AnnouncementBanner() {
       <a 
         id="announcement-banner" 
         href={bannerUrl}
-        className={`${bannerClasses} cursor-pointer hover:opacity-95 transition-opacity`}
-        style={{ top: '64px' }}
+        className={`${bannerClasses} cursor-pointer hover:opacity-95 transition-opacity block no-underline`}
+        style={{ top: '64px', display: 'block', textDecoration: 'none', color: 'inherit' }}
       >
         <BannerContent />
       </a>

@@ -146,6 +146,68 @@
       }
     }
     </script>
+    
+    <!-- Schema.org markup - WebSite with Sitelinks -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Petit Kangourou",
+      "alternateName": "Atelier Portage Bébé Versailles",
+      "url": "https://petitkangourou.fr",
+      "description": "Monitrice de portage physiologique certifiée à Versailles. Ateliers de portage bébé individuels, en couple et en groupe.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Petit Kangourou",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://petitkangourou.fr/kangourou.png"
+        }
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://petitkangourou.fr/?s={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
+    <!-- Schema.org markup - BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Accueil",
+          "item": "https://petitkangourou.fr/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Réservation",
+          "item": "https://petitkangourou.fr/reservation"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Contact",
+          "item": "https://petitkangourou.fr/contact"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "FAQ",
+          "item": "https://petitkangourou.fr/faq"
+        }
+      ]
+    }
+    </script>
     <style>
       @keyframes fade-in {
         from { opacity: 0; transform: translateY(20px); }

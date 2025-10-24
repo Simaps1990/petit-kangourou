@@ -1,1 +1,5 @@
+# Redirection permanente (301) de l'ancien domaine Netlify vers le nouveau domaine
+https://petitkangourou.netlify.app/* https://petitkangourou.fr/:splat 301!
+
+# SPA fallback pour le nouveau domaine
 /*    /index.html   200
