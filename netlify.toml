@@ -1,9 +1,15 @@
+# Désactiver le blocage des secrets (nécessaire pour Supabase)
+[build.environment]
+NETLIFY_SKIP_SECRET_DETECTION = "true"
+
+# Redirection du domaine Netlify → domaine final
 [[redirects]]
 from = "https://petitkangourou.netlify.app/*"
 to = "https://petitkangourou.fr/:splat"
 status = 301
 force = true
 
+# Fallback SPA
 [[redirects]]
 from = "/*"
 to = "/index.html"
