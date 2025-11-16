@@ -1,0 +1,12 @@
+# Rediriger TOUT ce qui arrive sur le sous-domaine Netlify vers le .fr
+[[redirects]]
+from = "https://petitkangourou.netlify.app/*"
+to = "https://petitkangourou.fr/:splat"
+status = 301
+force = true
+
+# Fallback SPA (pour ton app React/Vite/etc.)
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
