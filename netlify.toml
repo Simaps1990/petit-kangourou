@@ -1,6 +1,7 @@
 # Désactiver le blocage des secrets (nécessaire pour Supabase)
 [build.environment]
-NETLIFY_SKIP_SECRET_DETECTION = "true"
+SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_ANON_KEY"
+
 
 # Redirection du domaine Netlify → domaine final
 [[redirects]]
