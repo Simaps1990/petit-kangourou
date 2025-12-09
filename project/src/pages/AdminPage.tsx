@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Calendar, Plus, Trash2, Pencil, Clock, BookOpen, Package, HelpCircle, Save, X, Settings, CheckCircle, AlertCircle, MapPin } from 'lucide-react';
 import { authService } from '../lib/auth';
 import { supabase } from '../lib/supabase';
+import { AdminSlotsCalendar } from '../components/AdminSlotsCalendar';
 
 interface Booking {
   id: string;
@@ -902,6 +903,7 @@ function AdminPage() {
           {/* Time Slots Tab */}
           {activeTab === 'slots' && (
             <div>
+              <AdminSlotsCalendar />
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-[#c27275] mb-4">Gestion des créneaux</h2>
                 <div className="space-y-3">
