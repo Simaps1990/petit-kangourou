@@ -182,6 +182,17 @@ function Footer() {
                 <Instagram className="h-4 w-4" />
                 @paola_petit_kangourou
               </a>
+              <a 
+                href="https://share.google/n9q04ctI2Itk3GkUY" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:opacity-100 transition-opacity"
+              >
+                <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-white text-[#c27275] text-xs font-bold">
+                  G
+                </span>
+                Retrouvez-moi sur Google
+              </a>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Calendar, Plus, Trash2, Pencil, Clock, BookOpen, Package, HelpCircle, Save, X, Settings, CheckCircle, AlertCircle, MapPin } from 'lucide-react';
+import { Eye, EyeOff, Calendar, Plus, Trash2, Pencil, Clock, BookOpen, Package, HelpCircle, Save, X, Settings } from 'lucide-react';
 import { authService } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { AdminSlotsCalendar } from '../components/AdminSlotsCalendar';
@@ -186,6 +186,7 @@ function AdminPage() {
       .order('created_at', { ascending: false });
     
     if (data && !error) {
+      console.log('📘 AdminPage - bookings chargées', data.map(b => ({ id: b.id, date: b.date, time: b.time, status: b.status })));
       setBookings(data.map(booking => ({
         id: booking.id,
         serviceId: booking.service_id,
@@ -348,92 +349,6 @@ function AdminPage() {
     setLoginData({ email: '', password: '' });
   };
 
-  const addTimeSlot = async () => {
-    if (editingSlot) {
-      // Mode édition
-      const { error } = await supabase
-        .from('time_slots')
-        .update({
-          date: newSlot.date,
-          time: newSlot.time,
-          max_spots: newSlot.maxSpots,
-          address: newSlot.address || '',
-          categories: newSlot.categories
-        })
-        .eq('id', editingSlot.id);
-      
-      if (!error) {
-        await loadTimeSlots();
-        setNewSlot({ date: '', time: '', maxSpots: 1, address: '', categories: [] });
-        setEditingSlot(null);
-      } else {
-        alert('Erreur lors de la modification du créneau');
-      }
-    } else {
-      // Mode création
-      if (newSlot.date && newSlot.time && newSlot.categories.length > 0) {
-        const slotId = `${newSlot.date}-${newSlot.time}`;
-        
-        const { error } = await supabase
-          .from('time_slots')
-          .insert([{
-            id: slotId,
-            date: newSlot.date,
-            time: newSlot.time,
-            available: true,
-            max_spots: newSlot.maxSpots,
-            booked_spots: 0,
-            address: newSlot.address || '',
-            categories: newSlot.categories
-          }]);
-        
-        if (!error) {
-          await loadTimeSlots();
-          setNewSlot({ date: '', time: '', maxSpots: 1, address: '', categories: [] });
-        } else {
-          alert('Erreur lors de l\'ajout du créneau');
-        }
-      } else if (newSlot.categories.length === 0) {
-        alert('Veuillez sélectionner au moins une catégorie');
-      }
-    }
-  };
-
-  const toggleSlotAvailability = async (slotId: string) => {
-    const slot = timeSlots.find(s => s.id === slotId);
-    if (!slot) return;
-    
-    const { error } = await supabase
-      .from('time_slots')
-      .update({ available: !slot.available })
-      .eq('id', slotId);
-    
-    if (!error) {
-      await loadTimeSlots();
-    }
-  };
-
-  const updateSlotSpots = async (slotId: string, maxSpots: number) => {
-    const { error } = await supabase
-      .from('time_slots')
-      .update({ max_spots: maxSpots })
-      .eq('id', slotId);
-    
-    if (!error) {
-      await loadTimeSlots();
-    }
-  };
-
-  const deleteTimeSlot = async (slotId: string) => {
-    const { error } = await supabase
-      .from('time_slots')
-      .delete()
-      .eq('id', slotId);
-    
-    if (!error) {
-      await loadTimeSlots();
-    }
-  };
 
   const saveBlogPost = async (post: Omit<BlogPost, 'id' | 'createdAt'>) => {
     console.log('💾 Sauvegarde Blog:', post);
@@ -556,15 +471,6 @@ function AdminPage() {
     }
   };
 
-  const addFaq = () => {
-    setEditingFaq({
-      id: '',
-      question: 'Nouvelle question',
-      answer: 'Réponse à la question',
-      order: faqs.length + 1
-    } as FAQ);
-    setShowFaqForm(true);
-  };
 
   const saveFaq = async (faq: Omit<FAQ, 'id'>) => {
     console.log('💾 Sauvegarde FAQ:', faq);
@@ -613,14 +519,6 @@ function AdminPage() {
     setShowFaqForm(false);
   };
 
-  const updateFaq = async (faqId: string, field: 'question' | 'answer', value: string) => {
-    await supabase
-      .from('faqs')
-      .update({ [field]: value })
-      .eq('id', faqId);
-    
-    await loadFaqs();
-  };
 
   const deleteFaq = async (faqId: string) => {
     const { error } = await supabase
@@ -654,7 +552,7 @@ function AdminPage() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#fff1ee] to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#fff1ee] to-white flex justify-center pt-16 md:pt-20 pb-8">
         <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full mx-4">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-[#c27275] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -901,217 +799,9 @@ function AdminPage() {
           )}
 
           {/* Time Slots Tab */}
-          {activeTab === 'slots' && (
-            <div>
-              <AdminSlotsCalendar />
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-[#c27275] mb-4">Gestion des créneaux</h2>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-[#c27275] mb-1">Date</label>
-                    <input
-                      type="date"
-                      value={newSlot.date}
-                      onChange={(e) => setNewSlot({...newSlot, date: e.target.value})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border cursor-pointer"
-                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
-                      onClick={(e) => e.currentTarget.showPicker && e.currentTarget.showPicker()}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#c27275] mb-1">Heure</label>
-                    <input
-                      type="time"
-                      value={newSlot.time}
-                      onChange={(e) => setNewSlot({...newSlot, time: e.target.value})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border cursor-pointer"
-                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
-                      onClick={(e) => e.currentTarget.showPicker && e.currentTarget.showPicker()}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#c27275] mb-1">Places max</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={newSlot.maxSpots}
-                      onChange={(e) => setNewSlot({...newSlot, maxSpots: parseInt(e.target.value)})}
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
-                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#c27275] mb-1 flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      Adresse
-                    </label>
-                    <input
-                      type="text"
-                      value={newSlot.address}
-                      onChange={(e) => setNewSlot({...newSlot, address: e.target.value})}
-                      placeholder="Versailles, France"
-                      className="w-full px-3 py-2 border border-[#c27275]/20 rounded-lg bg-white box-border"
-                      style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-[#c27275] mb-2">Catégories (cochez les types d'ateliers concernés)</label>
-                    <div className="flex flex-wrap gap-4">
-                      {[
-                        { id: 'individual', label: 'Atelier individuel' },
-                        { id: 'couple', label: 'Atelier en couple' },
-                        { id: 'group', label: 'Atelier en groupe' },
-                        { id: 'home', label: 'Suivi à domicile' },
-                        { id: 'premium', label: 'Pack Premium' }
-                      ].map((cat) => (
-                        <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={newSlot.categories.includes(cat.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setNewSlot({...newSlot, categories: [...newSlot.categories, cat.id]});
-                              } else {
-                                setNewSlot({...newSlot, categories: newSlot.categories.filter(c => c !== cat.id)});
-                              }
-                            }}
-                            className="w-4 h-4 text-[#c27275] border-[#c27275]/20 rounded focus:ring-[#c27275]"
-                          />
-                          <span className="text-sm text-[#c27275]">{cat.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    {editingSlot && (
-                      <button
-                        onClick={() => {
-                          setEditingSlot(null);
-                          setNewSlot({ date: '', time: '', maxSpots: 1, address: '', categories: [] });
-                        }}
-                        className="flex-1 px-4 py-2 bg-gray-200 text-[#c27275] rounded-lg hover:bg-gray-300"
-                      >
-                        Annuler
-                      </button>
-                    )}
-                    <button
-                      onClick={addTimeSlot}
-                      className="flex-1 px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]/90 flex items-center justify-center gap-2"
-                    >
-                      {editingSlot ? (
-                        <>
-                          <Pencil className="h-4 w-4" />
-                          Modifier le créneau
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="h-4 w-4" />
-                          Ajouter un créneau
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {timeSlots.map((slot) => (
-                  <div key={slot.id} className="border border-[#c27275]/20 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <div className="text-xs text-[#c27275]/60 mb-1">Date</div>
-                        <div className="font-semibold text-[#c27275]">{formatDate(slot.date)}</div>
-                        <div className="text-xs text-[#c27275]/60 mt-2 mb-1">Heure</div>
-                        <div className="text-lg font-bold">{slot.time}</div>
-                        {slot.categories && slot.categories.length > 0 && (
-                          <>
-                            <div className="text-xs text-[#c27275]/60 mt-2 mb-1">Types d'ateliers</div>
-                            <div className="text-sm font-medium text-[#c27275] flex flex-wrap gap-1">
-                              {slot.categories.map(cat => (
-                                <span key={cat} className="px-2 py-1 bg-[#fff1ee] rounded text-xs">
-                                  {cat === 'individual' && 'Individuel'}
-                                  {cat === 'couple' && 'Couple'}
-                                  {cat === 'group' && 'Groupe'}
-                                  {cat === 'home' && 'Domicile'}
-                                  {cat === 'premium' && 'Premium'}
-                                </span>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                        {slot.address && (
-                          <>
-                            <div className="text-xs text-[#c27275]/60 mt-2 mb-1 flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              Lieu
-                            </div>
-                            <div className="text-sm text-[#c27275]">{slot.address}</div>
-                          </>
-                        )}
-                      </div>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => {
-                            setEditingSlot(slot);
-                            setNewSlot({
-                              date: slot.date,
-                              time: slot.time,
-                              maxSpots: slot.maxSpots,
-                              address: slot.address || '',
-                              categories: slot.categories || []
-                            });
-                          }}
-                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                          title="Modifier"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => toggleSlotAvailability(slot.id)}
-                          className={`p-1 rounded ${slot.available ? 'text-green-600' : 'text-red-600'}`}
-                        >
-                          {slot.available ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-                        </button>
-                        <button
-                          onClick={() => deleteTimeSlot(slot.id)}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-[#c27275]/70">Places max:</span>
-                        <input
-                          type="number"
-                          min="1"
-                          max="10"
-                          value={slot.maxSpots}
-                          onChange={(e) => updateSlotSpots(slot.id, parseInt(e.target.value))}
-                          className="w-16 px-2 py-1 border border-[#c27275]/20 rounded text-center"
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-[#c27275]/70">Réservées:</span>
-                        <span className="font-semibold">{slot.bookedSpots}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-[#c27275]/70">Disponibles:</span>
-                        <span className="font-semibold text-green-600">{slot.maxSpots - slot.bookedSpots}</span>
-                      </div>
-                    </div>
-                    
-                    <div className={`mt-3 px-2 py-1 rounded text-xs font-medium text-center ${
-                      slot.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {slot.available ? 'Disponible' : 'Indisponible'}
-                    </div>
-                  </div>
-                ))}
-              </div>
+        {activeTab === 'slots' && (
+          <div>
+            <AdminSlotsCalendar />
             </div>
           )}
 
