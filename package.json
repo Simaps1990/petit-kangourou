@@ -2,6 +2,7 @@
   "dependencies": {
     "@stripe/stripe-js": "^8.1.0",
     "@types/node": "^24.8.1",
+    "firebase": "^12.10.0",
     "stripe": "^19.1.0"
   }
 }

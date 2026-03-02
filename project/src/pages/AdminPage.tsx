@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Calendar, Plus, Trash2, Pencil, Clock, BookOpen, Package, HelpCircle, Save, X, Settings } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Eye, EyeOff, Calendar, Plus, Trash2, Pencil, Clock, BookOpen, Package, HelpCircle, Save, X, Settings, Smartphone, AlertCircle } from 'lucide-react';
+import { addDoc, getDoc, getDocs, collection as firestoreCollection, doc as firestoreDoc, limit, orderBy, query, serverTimestamp, setDoc } from 'firebase/firestore';
+import { getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage';
 import { authService } from '../lib/auth';
 import { supabase } from '../lib/supabase';
 import { AdminSlotsCalendar } from '../components/AdminSlotsCalendar';
+import { db, ensureAnonymousAuth, storage } from '../lib/firebase';
 
 interface Booking {
   id: string;
@@ -80,7 +83,7 @@ function AdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'slots' | 'clients' | 'blog' | 'services' | 'faq' | 'settings'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'slots' | 'clients' | 'blog' | 'services' | 'faq' | 'settings' | 'mobileApp'>('bookings');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -110,12 +113,440 @@ function AdminPage() {
   const [showFaqForm, setShowFaqForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; bookingId: string; clientName: string }>({ show: false, bookingId: '', clientName: '' });
 
+  const [mobileCollection, setMobileCollection] = useState<'news_articles' | 'instructors' | 'videos'>('news_articles');
+  const [mobileDocs, setMobileDocs] = useState<Array<{ id: string; data: any }>>([]);
+  const [mobileSelectedDocId, setMobileSelectedDocId] = useState<string>('');
+  const [mobileDocJson, setMobileDocJson] = useState<string>('');
+  const [mobileLoading, setMobileLoading] = useState(false);
+  const [mobileError, setMobileError] = useState<string | null>(null);
+  const [mobileSaveSuccess, setMobileSaveSuccess] = useState(false);
+  const [mobileAdvancedMode, setMobileAdvancedMode] = useState(false);
+
+  const [videoForm, setVideoForm] = useState({
+    title: '',
+    description: '',
+    duration: '',
+    difficulty: '',
+    age: '',
+    imagePath: '',
+    imageStoragePath: '',
+    videoUrl: '',
+    videoStoragePath: ''
+  });
+
+  const [newsForm, setNewsForm] = useState({
+    tag: '',
+    category: '',
+    title: '',
+    excerpt: '',
+    imagePath: '',
+    keyPointsText: '',
+    publishedAt: ''
+  });
+
+  const [instructorForm, setInstructorForm] = useState({
+    name: '',
+    specialty: '',
+    address: '',
+    latitude: '',
+    longitude: '',
+    imagePath: '',
+    tagsText: '',
+    email: ''
+  });
+
+  const [instructorAddressSuggestions, setInstructorAddressSuggestions] = useState<
+    Array<{ label: string; latitude?: number; longitude?: number }>
+  >([]);
+  const instructorAddressDebounceRef = useRef<number | null>(null);
+
+  const fetchInstructorAddressSuggestions = async (q: string) => {
+    const queryText = q.trim();
+    if (queryText.length < 3) {
+      setInstructorAddressSuggestions([]);
+      return;
+    }
+
+    const url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(queryText)}&limit=6`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erreur API adresse.gouv.fr');
+    const json: any = await res.json();
+    const features: any[] = Array.isArray(json?.features) ? json.features : [];
+    const items = features
+      .map((f: any) => {
+        const label = (f?.properties?.label ?? '').toString();
+        const coords = Array.isArray(f?.geometry?.coordinates) ? f.geometry.coordinates : [];
+        const lon = typeof coords?.[0] === 'number' ? coords[0] : undefined;
+        const lat = typeof coords?.[1] === 'number' ? coords[1] : undefined;
+        return {
+          label,
+          latitude: lat,
+          longitude: lon
+        };
+      })
+      .filter((x: any) => x.label);
+    setInstructorAddressSuggestions(items);
+  };
+
+  const videoFileInputRef = useRef<HTMLInputElement | null>(null);
+  const videoImageFileInputRef = useRef<HTMLInputElement | null>(null);
+  const newsImageFileInputRef = useRef<HTMLInputElement | null>(null);
+  const instructorImageFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const uploadToStorage = async (folder: string, file: File) => {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${folder}/${Date.now()}-${safeName}`;
+    const ref = storageRef(storage, path);
+    await ensureAnonymousAuth();
+    await uploadBytes(ref, file);
+    const url = await getDownloadURL(ref);
+    return { storagePath: path, url };
+  };
+
+  const loadMobileCollection = async (collectionName: typeof mobileCollection) => {
+    setMobileLoading(true);
+    setMobileError(null);
+    setMobileSaveSuccess(false);
+    setMobileSelectedDocId('');
+    setMobileDocJson('');
+    try {
+      const baseRef = firestoreCollection(db, collectionName);
+      const q = collectionName === 'news_articles'
+        ? query(baseRef, orderBy('publishedAt', 'desc'), limit(50))
+        : collectionName === 'instructors'
+          ? query(baseRef, orderBy('name', 'asc'), limit(50))
+          : query(baseRef, orderBy('createdAt', 'desc'), limit(50));
+      const snap = await getDocs(q);
+      const docs = snap.docs.map((d) => ({ id: d.id, data: d.data() }));
+      setMobileDocs(docs);
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors du chargement Firestore');
+      setMobileDocs([]);
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const loadMobileDoc = async (collectionName: typeof mobileCollection, docId: string) => {
+    if (!docId) return;
+    setMobileLoading(true);
+    setMobileError(null);
+    setMobileSaveSuccess(false);
+    try {
+      const ref = firestoreDoc(db, collectionName, docId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        setMobileError('Document introuvable');
+        setMobileDocJson('');
+        return;
+      }
+      setMobileDocJson(JSON.stringify(snap.data(), null, 2));
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors du chargement du document');
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const saveMobileDoc = async () => {
+    if (!mobileSelectedDocId) {
+      setMobileError('Sélectionne un document avant de sauvegarder');
+      return;
+    }
+    setMobileLoading(true);
+    setMobileError(null);
+    setMobileSaveSuccess(false);
+    try {
+      await ensureAnonymousAuth();
+      const parsed = JSON.parse(mobileDocJson || '{}');
+      const ref = firestoreDoc(db, mobileCollection, mobileSelectedDocId);
+      await setDoc(ref, parsed, { merge: true });
+      setMobileSaveSuccess(true);
+      await loadMobileCollection(mobileCollection);
+      setTimeout(() => setMobileSaveSuccess(false), 2500);
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors de la sauvegarde');
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const addVideo = async () => {
+    setMobileLoading(true);
+    setMobileError(null);
+    setMobileSaveSuccess(false);
+    try {
+      await ensureAnonymousAuth();
+      const payload: any = {
+        title: videoForm.title.trim(),
+        description: videoForm.description.trim(),
+        duration: videoForm.duration.trim(),
+        difficulty: videoForm.difficulty.trim(),
+        age: videoForm.age.trim(),
+        imagePath: videoForm.imagePath.trim(),
+        imageStoragePath: videoForm.imageStoragePath.trim(),
+        videoUrl: videoForm.videoUrl.trim(),
+        videoStoragePath: videoForm.videoStoragePath.trim(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (typeof v === 'string' && v.length === 0) delete payload[k];
+      });
+
+      await ensureAnonymousAuth();
+      await addDoc(firestoreCollection(db, 'videos'), payload);
+      setMobileSaveSuccess(true);
+      setVideoForm({
+        title: '',
+        description: '',
+        duration: '',
+        difficulty: '',
+        age: '',
+        imagePath: '',
+        imageStoragePath: '',
+        videoUrl: '',
+        videoStoragePath: ''
+      });
+      await loadMobileCollection('videos');
+      setTimeout(() => setMobileSaveSuccess(false), 2500);
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors de la création de la vidéo');
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const updateVideo = async () => {
+    if (!mobileSelectedDocId) {
+      setMobileError('Sélectionne une vidéo à gauche avant de modifier');
+      return;
+    }
+    setMobileLoading(true);
+    setMobileError(null);
+    setMobileSaveSuccess(false);
+    try {
+      await ensureAnonymousAuth();
+      const payload: any = {
+        title: videoForm.title.trim(),
+        description: videoForm.description.trim(),
+        duration: videoForm.duration.trim(),
+        difficulty: videoForm.difficulty.trim(),
+        age: videoForm.age.trim(),
+        imagePath: videoForm.imagePath.trim(),
+        imageStoragePath: videoForm.imageStoragePath.trim(),
+        videoUrl: videoForm.videoUrl.trim(),
+        videoStoragePath: videoForm.videoStoragePath.trim(),
+        updatedAt: serverTimestamp()
+      };
+
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (typeof v === 'string' && v.length === 0) delete payload[k];
+      });
+
+      const ref = firestoreDoc(db, 'videos', mobileSelectedDocId);
+      await setDoc(ref, payload, { merge: true });
+      setMobileSaveSuccess(true);
+      await loadMobileCollection('videos');
+      setTimeout(() => setMobileSaveSuccess(false), 2500);
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors de la mise à jour de la vidéo');
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const addNewsArticle = async () => {
+    setMobileLoading(true);
+    setMobileError(null);
+    setMobileSaveSuccess(false);
+    try {
+      await ensureAnonymousAuth();
+      const nowIso = new Date().toISOString();
+      const keyPoints = newsForm.keyPointsText
+        .split(/\r?\n|,/g)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const publishedAtIso = newsForm.publishedAt ? new Date(newsForm.publishedAt).toISOString() : nowIso;
+
+      const payload: any = {
+        tag: newsForm.tag.trim(),
+        category: newsForm.category.trim(),
+        title: newsForm.title.trim(),
+        excerpt: newsForm.excerpt.trim(),
+        imagePath: newsForm.imagePath.trim(),
+        keyPoints,
+        publishedAt: publishedAtIso,
+        createdAt: nowIso,
+        updatedAt: nowIso
+      };
+
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (typeof v === 'string' && v.length === 0) delete payload[k];
+      });
+
+      await addDoc(firestoreCollection(db, 'news_articles'), payload);
+      setMobileSaveSuccess(true);
+      setNewsForm({ tag: '', category: '', title: '', excerpt: '', imagePath: '', keyPointsText: '', publishedAt: '' });
+      await loadMobileCollection('news_articles');
+      setTimeout(() => setMobileSaveSuccess(false), 2500);
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors de la création de l’article');
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const updateNewsArticle = async () => {
+    if (!mobileSelectedDocId) {
+      setMobileError('Sélectionne un article à gauche avant de modifier');
+      return;
+    }
+    setMobileLoading(true);
+    setMobileError(null);
+    setMobileSaveSuccess(false);
+    try {
+      await ensureAnonymousAuth();
+      const nowIso = new Date().toISOString();
+      const keyPoints = newsForm.keyPointsText
+        .split(/\r?\n|,/g)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const payload: any = {
+        tag: newsForm.tag.trim(),
+        category: newsForm.category.trim(),
+        title: newsForm.title.trim(),
+        excerpt: newsForm.excerpt.trim(),
+        imagePath: newsForm.imagePath.trim(),
+        keyPoints,
+        publishedAt: newsForm.publishedAt ? new Date(newsForm.publishedAt).toISOString() : undefined,
+        updatedAt: nowIso
+      };
+
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (v === undefined) delete payload[k];
+        if (typeof v === 'string' && v.length === 0) delete payload[k];
+      });
+
+      const ref = firestoreDoc(db, 'news_articles', mobileSelectedDocId);
+      await setDoc(ref, payload, { merge: true });
+      setMobileSaveSuccess(true);
+      await loadMobileCollection('news_articles');
+      setTimeout(() => setMobileSaveSuccess(false), 2500);
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors de la mise à jour de l’article');
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const addInstructor = async () => {
+    setMobileLoading(true);
+    setMobileError(null);
+    setMobileSaveSuccess(false);
+    try {
+      await ensureAnonymousAuth();
+      const nowIso = new Date().toISOString();
+      const tags = instructorForm.tagsText
+        .split(/\r?\n|,/g)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const lat = instructorForm.latitude.trim() ? Number(instructorForm.latitude) : undefined;
+      const lng = instructorForm.longitude.trim() ? Number(instructorForm.longitude) : undefined;
+
+      const payload: any = {
+        name: instructorForm.name.trim(),
+        specialty: instructorForm.specialty.trim(),
+        address: instructorForm.address.trim(),
+        latitude: Number.isFinite(lat as any) ? lat : undefined,
+        longitude: Number.isFinite(lng as any) ? lng : undefined,
+        imagePath: instructorForm.imagePath.trim(),
+        tags,
+        email: instructorForm.email.trim(),
+        createdAt: nowIso,
+        updatedAt: nowIso
+      };
+
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (v === undefined) delete payload[k];
+        if (typeof v === 'string' && v.length === 0) delete payload[k];
+      });
+
+      await addDoc(firestoreCollection(db, 'instructors'), payload);
+      setMobileSaveSuccess(true);
+      setInstructorAddressSuggestions([]);
+      setInstructorForm({ name: '', specialty: '', address: '', latitude: '', longitude: '', imagePath: '', tagsText: '', email: '' });
+      await loadMobileCollection('instructors');
+      setTimeout(() => setMobileSaveSuccess(false), 2500);
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors de la création de la monitrice');
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const updateInstructor = async () => {
+    if (!mobileSelectedDocId) {
+      setMobileError('Sélectionne une monitrice à gauche avant de modifier');
+      return;
+    }
+    setMobileLoading(true);
+    setMobileError(null);
+    setMobileSaveSuccess(false);
+    try {
+      await ensureAnonymousAuth();
+      const nowIso = new Date().toISOString();
+      const tags = instructorForm.tagsText
+        .split(/\r?\n|,/g)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const lat = instructorForm.latitude.trim() ? Number(instructorForm.latitude) : undefined;
+      const lng = instructorForm.longitude.trim() ? Number(instructorForm.longitude) : undefined;
+
+      const payload: any = {
+        name: instructorForm.name.trim(),
+        specialty: instructorForm.specialty.trim(),
+        address: instructorForm.address.trim(),
+        latitude: Number.isFinite(lat as any) ? lat : undefined,
+        longitude: Number.isFinite(lng as any) ? lng : undefined,
+        imagePath: instructorForm.imagePath.trim(),
+        tags,
+        email: instructorForm.email.trim(),
+        updatedAt: nowIso
+      };
+
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (v === undefined) delete payload[k];
+        if (typeof v === 'string' && v.length === 0) delete payload[k];
+      });
+
+      const ref = firestoreDoc(db, 'instructors', mobileSelectedDocId);
+      await setDoc(ref, payload, { merge: true });
+      setMobileSaveSuccess(true);
+      await loadMobileCollection('instructors');
+      setTimeout(() => setMobileSaveSuccess(false), 2500);
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors de la mise à jour de la monitrice');
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isLoggedIn) {
       loadBookings();
       loadTimeSlots();
       loadBlogPosts();
-    loadSettings();
+      loadSettings();
       loadServices();
       loadFaqs();
       loadClients();
@@ -145,6 +576,7 @@ function AdminPage() {
         bannerText: data.banner_text || '',
         bannerUrl: data.banner_url || ''
       };
+
       setSettings(loadedSettings);
       setOriginalSettings(loadedSettings);
     }
@@ -673,7 +1105,8 @@ function AdminPage() {
             { id: 'services', label: 'Services', icon: Package },
             { id: 'blog', label: 'Blog', icon: BookOpen },
             { id: 'faq', label: 'FAQ', icon: HelpCircle },
-            { id: 'settings', label: 'Paramètres', icon: Settings }
+            { id: 'settings', label: 'Paramètres', icon: Settings },
+            { id: 'mobileApp', label: 'Application mobile', icon: Smartphone }
           ].map((tab) => {
             const Icon = tab.icon;
             return (
@@ -1001,6 +1434,753 @@ function AdminPage() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mobile App Tab */}
+          {activeTab === 'mobileApp' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h2 className="text-2xl font-bold text-[#c27275]">Application mobile</h2>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={mobileCollection}
+                    onChange={async (e) => {
+                      const value = e.target.value as typeof mobileCollection;
+                      setMobileCollection(value);
+                      setMobileAdvancedMode(false);
+                      setMobileDocs([]);
+                      setMobileSelectedDocId('');
+                      setMobileDocJson('');
+                      setMobileError(null);
+                      setMobileSaveSuccess(false);
+
+                      setNewsForm({ tag: '', category: '', title: '', excerpt: '', imagePath: '', keyPointsText: '', publishedAt: '' });
+                      setInstructorAddressSuggestions([]);
+                      setInstructorForm({ name: '', specialty: '', address: '', latitude: '', longitude: '', imagePath: '', tagsText: '', email: '' });
+                      setVideoForm({
+                        title: '',
+                        description: '',
+                        duration: '',
+                        difficulty: '',
+                        age: '',
+                        imagePath: '',
+                        imageStoragePath: '',
+                        videoUrl: '',
+                        videoStoragePath: ''
+                      });
+
+                      await loadMobileCollection(value);
+                    }}
+                    className="px-3 py-2 border border-[#c27275]/20 rounded-lg text-[#c27275] bg-white"
+                  >
+                    <option value="news_articles">news_articles</option>
+                    <option value="instructors">instructors</option>
+                    <option value="videos">videos</option>
+                  </select>
+                  <button
+                    onClick={() => loadMobileCollection(mobileCollection)}
+                    className="px-3 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]"
+                  >
+                    Recharger
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 border border-[#c27275]/20 rounded-lg bg-[#fff1ee]/30">
+                <div className="text-[#c27275] font-medium mb-1">Firebase / Firestore</div>
+                <div className="text-[#c27275]/70 text-sm">
+                  Ici tu peux gérer le contenu Firestore de l’application mobile (lecture et modification).
+                </div>
+              </div>
+
+              {mobileError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {mobileError}
+                </div>
+              )}
+
+              {mobileSaveSuccess && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+                  Sauvegardé.
+                </div>
+              )}
+
+              {mobileCollection === 'instructors' && (
+                <div className="border border-[#c27275]/20 rounded-lg p-4">
+                  <div className="font-semibold text-[#c27275] mb-4">
+                    {mobileSelectedDocId ? 'Modifier la monitrice' : 'Ajouter une monitrice'}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Nom</label>
+                      <input
+                        type="text"
+                        value={instructorForm.name}
+                        onChange={(e) => setInstructorForm((s) => ({ ...s, name: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Spécialité</label>
+                      <input
+                        type="text"
+                        value={instructorForm.specialty}
+                        onChange={(e) => setInstructorForm((s) => ({ ...s, specialty: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Adresse</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={instructorForm.address}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setInstructorForm((s) => ({ ...s, address: v, latitude: '', longitude: '' }));
+                            if (instructorAddressDebounceRef.current) {
+                              window.clearTimeout(instructorAddressDebounceRef.current);
+                            }
+                            instructorAddressDebounceRef.current = window.setTimeout(async () => {
+                              try {
+                                await fetchInstructorAddressSuggestions(v);
+                              } catch {
+                                setInstructorAddressSuggestions([]);
+                              }
+                            }, 250);
+                          }}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                          placeholder="Commence à taper une adresse..."
+                        />
+
+                        {instructorAddressSuggestions.length > 0 && (
+                          <div className="absolute z-10 mt-1 w-full bg-white border border-[#c27275]/20 rounded-lg shadow max-h-56 overflow-auto">
+                            {instructorAddressSuggestions.map((sug, idx) => (
+                              <button
+                                key={`${sug.label}-${idx}`}
+                                type="button"
+                                onClick={() => {
+                                  setInstructorForm((s) => ({
+                                    ...s,
+                                    address: sug.label,
+                                    latitude: sug.latitude !== undefined ? String(sug.latitude) : s.latitude,
+                                    longitude: sug.longitude !== undefined ? String(sug.longitude) : s.longitude
+                                  }));
+                                  setInstructorAddressSuggestions([]);
+                                }}
+                                className="w-full text-left px-3 py-2 text-sm hover:bg-[#fff1ee]"
+                              >
+                                {sug.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-xs text-[#c27275]/70 mt-1">
+                        La latitude/longitude sont remplies automatiquement après sélection.
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Image (URL ou chemin)</label>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          value={instructorForm.imagePath}
+                          onChange={(e) => setInstructorForm((s) => ({ ...s, imagePath: e.target.value }))}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                          placeholder="https://..."
+                        />
+                        <input
+                          ref={instructorImageFileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const f = e.target.files?.[0];
+                            if (!f) return;
+                            setMobileLoading(true);
+                            setMobileError(null);
+                            try {
+                              const { url } = await uploadToStorage('instructors/images', f);
+                              setInstructorForm((s) => ({ ...s, imagePath: url }));
+                              setMobileSaveSuccess(true);
+                              setTimeout(() => setMobileSaveSuccess(false), 2500);
+                            } catch (err: any) {
+                              setMobileError(err?.message || 'Erreur upload image');
+                            } finally {
+                              setMobileLoading(false);
+                              if (instructorImageFileInputRef.current) instructorImageFileInputRef.current.value = '';
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => instructorImageFileInputRef.current?.click()}
+                          disabled={mobileLoading}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                        >
+                          Upload photo
+                        </button>
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Tags (1 par ligne ou séparés par virgule)</label>
+                      <textarea
+                        value={instructorForm.tagsText}
+                        onChange={(e) => setInstructorForm((s) => ({ ...s, tagsText: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        rows={3}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                      <input
+                        type="email"
+                        value={instructorForm.email}
+                        onChange={(e) => setInstructorForm((s) => ({ ...s, email: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={mobileSelectedDocId ? updateInstructor : addInstructor}
+                      disabled={mobileLoading || !instructorForm.name.trim()}
+                      className="px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {mobileSelectedDocId ? 'Enregistrer' : 'Ajouter'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileSelectedDocId('');
+                        setMobileDocJson('');
+                        setInstructorAddressSuggestions([]);
+                        setInstructorForm({ name: '', specialty: '', address: '', latitude: '', longitude: '', imagePath: '', tagsText: '', email: '' });
+                      }}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                    >
+                      Nouveau
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {mobileCollection === 'instructors' && mobileDocs.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {mobileDocs.map((d) => (
+                    <div
+                      key={d.id}
+                      className="border border-[#c27275]/20 rounded-lg p-4 bg-white cursor-pointer hover:bg-[#fff1ee]/40"
+                      onClick={async () => {
+                        setMobileSelectedDocId(d.id);
+                        await loadMobileDoc('instructors', d.id);
+                        const data: any = d.data || {};
+                        const tags = Array.isArray(data.tags) ? data.tags.map((x: any) => String(x)) : [];
+                        setInstructorAddressSuggestions([]);
+                        setInstructorForm({
+                          name: (data.name ?? '').toString(),
+                          specialty: (data.specialty ?? '').toString(),
+                          address: (data.address ?? '').toString(),
+                          latitude: data.latitude !== undefined && data.latitude !== null ? String(data.latitude) : '',
+                          longitude: data.longitude !== undefined && data.longitude !== null ? String(data.longitude) : '',
+                          imagePath: (data.imagePath ?? '').toString(),
+                          tagsText: tags.join('\n'),
+                          email: (data.email ?? '').toString()
+                        });
+                      }}
+                    >
+                      {(d.data?.imagePath || '').toString().startsWith('http') && (
+                        <img src={d.data.imagePath} alt="" className="w-full h-32 object-cover rounded mb-3" />
+                      )}
+                      <div className="font-semibold text-[#c27275]">{(d.data?.name ?? d.id).toString()}</div>
+                      <div className="text-sm text-[#c27275]/70">{(d.data?.specialty ?? '').toString()}</div>
+                      <div className="text-xs text-[#c27275]/60 mt-2">{(d.data?.email ?? '').toString()}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {mobileCollection === 'news_articles' && (
+                <div className="border border-[#c27275]/20 rounded-lg p-4">
+                  <div className="font-semibold text-[#c27275] mb-4">
+                    {mobileSelectedDocId ? 'Modifier l’article' : 'Ajouter un article'}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Tag</label>
+                      <input
+                        type="text"
+                        value={newsForm.tag}
+                        onChange={(e) => setNewsForm((s) => ({ ...s, tag: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie</label>
+                      <input
+                        type="text"
+                        value={newsForm.category}
+                        onChange={(e) => setNewsForm((s) => ({ ...s, category: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
+                      <input
+                        type="text"
+                        value={newsForm.title}
+                        onChange={(e) => setNewsForm((s) => ({ ...s, title: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Extrait</label>
+                      <textarea
+                        value={newsForm.excerpt}
+                        onChange={(e) => setNewsForm((s) => ({ ...s, excerpt: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        rows={3}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Image (URL ou chemin)</label>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          value={newsForm.imagePath}
+                          onChange={(e) => setNewsForm((s) => ({ ...s, imagePath: e.target.value }))}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                          placeholder="https://..."
+                        />
+                        <input
+                          ref={newsImageFileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const f = e.target.files?.[0];
+                            if (!f) return;
+                            setMobileLoading(true);
+                            setMobileError(null);
+                            try {
+                              const { url } = await uploadToStorage('news/images', f);
+                              setNewsForm((s) => ({ ...s, imagePath: url }));
+                              setMobileSaveSuccess(true);
+                              setTimeout(() => setMobileSaveSuccess(false), 2500);
+                            } catch (err: any) {
+                              setMobileError(err?.message || 'Erreur upload image');
+                            } finally {
+                              setMobileLoading(false);
+                              if (newsImageFileInputRef.current) newsImageFileInputRef.current.value = '';
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => newsImageFileInputRef.current?.click()}
+                          disabled={mobileLoading}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                        >
+                          Upload photo
+                        </button>
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Points clés (1 par ligne ou séparés par virgule)</label>
+                      <textarea
+                        value={newsForm.keyPointsText}
+                        onChange={(e) => setNewsForm((s) => ({ ...s, keyPointsText: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        rows={4}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Publié le</label>
+                      <input
+                        type="datetime-local"
+                        value={newsForm.publishedAt}
+                        onChange={(e) => setNewsForm((s) => ({ ...s, publishedAt: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={mobileSelectedDocId ? updateNewsArticle : addNewsArticle}
+                      disabled={mobileLoading || !newsForm.title.trim()}
+                      className="px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {mobileSelectedDocId ? 'Enregistrer' : 'Ajouter'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileSelectedDocId('');
+                        setMobileDocJson('');
+                        setNewsForm({ tag: '', category: '', title: '', excerpt: '', imagePath: '', keyPointsText: '', publishedAt: '' });
+                      }}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                    >
+                      Nouveau
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {mobileCollection === 'videos' && (
+                <div className="border border-[#c27275]/20 rounded-lg p-4">
+                  <div className="font-semibold text-[#c27275] mb-4">
+                    {mobileSelectedDocId ? 'Modifier la vidéo' : 'Ajouter une vidéo'}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
+                      <input
+                        type="text"
+                        value={videoForm.title}
+                        onChange={(e) => setVideoForm((s) => ({ ...s, title: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        placeholder="Titre affiché dans l’app"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Durée</label>
+                      <input
+                        type="text"
+                        value={videoForm.duration}
+                        onChange={(e) => setVideoForm((s) => ({ ...s, duration: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        placeholder="Ex: 12 min"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Difficulté</label>
+                      <input
+                        type="text"
+                        value={videoForm.difficulty}
+                        onChange={(e) => setVideoForm((s) => ({ ...s, difficulty: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        placeholder="Ex: Débutant"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Âge</label>
+                      <input
+                        type="text"
+                        value={videoForm.age}
+                        onChange={(e) => setVideoForm((s) => ({ ...s, age: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        placeholder="Ex: 0-6 mois"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                      <textarea
+                        value={videoForm.description}
+                        onChange={(e) => setVideoForm((s) => ({ ...s, description: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        rows={4}
+                        placeholder="Description affichée dans l’app"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Image (URL ou chemin)</label>
+                      <input
+                        type="text"
+                        value={videoForm.imagePath}
+                        onChange={(e) => setVideoForm((s) => ({ ...s, imagePath: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        placeholder="Ex: https://... ou assets/..."
+                      />
+                      <div className="text-xs text-[#c27275]/70 mt-1">Ton modèle Flutter lit aussi `imageUrl` si présent.</div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Chemin Storage vidéo</label>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          value={videoForm.videoStoragePath}
+                          onChange={(e) => setVideoForm((s) => ({ ...s, videoStoragePath: e.target.value }))}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                          placeholder="Ex: videos/files/mon-fichier.mp4"
+                        />
+                        <input
+                          ref={videoFileInputRef}
+                          type="file"
+                          accept="video/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const f = e.target.files?.[0];
+                            if (!f) return;
+                            setMobileLoading(true);
+                            setMobileError(null);
+                            try {
+                              const { storagePath, url } = await uploadToStorage('videos/files', f);
+                              setVideoForm((s) => ({ ...s, videoStoragePath: storagePath, videoUrl: url }));
+                              setMobileSaveSuccess(true);
+                              setTimeout(() => setMobileSaveSuccess(false), 2500);
+                            } catch (err: any) {
+                              setMobileError(err?.message || 'Erreur upload vidéo');
+                            } finally {
+                              setMobileLoading(false);
+                              if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => videoFileInputRef.current?.click()}
+                          disabled={mobileLoading}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                        >
+                          Upload vidéo
+                        </button>
+                      </div>
+                      <div className="text-xs text-[#c27275]/70 mt-1">
+                        Dans ton app Flutter, l’URL est souvent résolue depuis un storagePath.
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Chemin Storage image</label>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                          type="text"
+                          value={videoForm.imageStoragePath}
+                          onChange={(e) => setVideoForm((s) => ({ ...s, imageStoragePath: e.target.value }))}
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                          placeholder="Ex: videos/thumbnails/mon-fichier.jpg"
+                        />
+                        <input
+                          ref={videoImageFileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const f = e.target.files?.[0];
+                            if (!f) return;
+                            setMobileLoading(true);
+                            setMobileError(null);
+                            try {
+                              const { storagePath, url } = await uploadToStorage('videos/thumbnails', f);
+                              setVideoForm((s) => ({ ...s, imageStoragePath: storagePath, imagePath: url }));
+                              setMobileSaveSuccess(true);
+                              setTimeout(() => setMobileSaveSuccess(false), 2500);
+                            } catch (err: any) {
+                              setMobileError(err?.message || 'Erreur upload image');
+                            } finally {
+                              setMobileLoading(false);
+                              if (videoImageFileInputRef.current) videoImageFileInputRef.current.value = '';
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => videoImageFileInputRef.current?.click()}
+                          disabled={mobileLoading}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                        >
+                          Upload photo
+                        </button>
+                      </div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Video URL (optionnel)</label>
+                      <input
+                        type="text"
+                        value={videoForm.videoUrl}
+                        onChange={(e) => setVideoForm((s) => ({ ...s, videoUrl: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        placeholder="Ex: https://firebasestorage.googleapis.com/..."
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={mobileSelectedDocId ? updateVideo : addVideo}
+                      disabled={mobileLoading || (!videoForm.title.trim() && !videoForm.videoStoragePath.trim() && !videoForm.videoUrl.trim())}
+                      className="px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {mobileSelectedDocId ? 'Enregistrer' : 'Ajouter'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileSelectedDocId('');
+                        setMobileDocJson('');
+                        setVideoForm({
+                          title: '',
+                          description: '',
+                          duration: '',
+                          difficulty: '',
+                          age: '',
+                          imagePath: '',
+                          imageStoragePath: '',
+                          videoUrl: '',
+                          videoStoragePath: ''
+                        });
+                      }}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                    >
+                      Nouveau
+                    </button>
+                  </div>
+                </div>
+              )}
+
+               {mobileCollection === 'videos' && mobileDocs.length > 0 && (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                   {mobileDocs.map((d) => (
+                     <div
+                       key={d.id}
+                       className="border border-[#c27275]/20 rounded-lg p-4 bg-white cursor-pointer hover:bg-[#fff1ee]/40"
+                       onClick={async () => {
+                         setMobileSelectedDocId(d.id);
+                         await loadMobileDoc('videos', d.id);
+                         const data: any = d.data || {};
+                         setVideoForm({
+                           title: (data.title ?? '').toString(),
+                           description: (data.description ?? '').toString(),
+                           duration: (data.duration ?? '').toString(),
+                           difficulty: (data.difficulty ?? '').toString(),
+                           age: (data.age ?? '').toString(),
+                           imagePath: (data.imagePath ?? data.imageUrl ?? '').toString(),
+                           imageStoragePath: (data.imageStoragePath ?? '').toString(),
+                           videoUrl: (data.videoUrl ?? '').toString(),
+                           videoStoragePath: (data.videoStoragePath ?? '').toString()
+                         });
+                       }}
+                     >
+                       {(d.data?.imagePath || '').toString().startsWith('http') && (
+                         <img src={d.data.imagePath} alt="" className="w-full h-32 object-cover rounded mb-3" />
+                       )}
+                       <div className="font-semibold text-[#c27275]">{(d.data?.title ?? d.id).toString()}</div>
+                       <div className="text-sm text-[#c27275]/70">{(d.data?.duration ?? '').toString()}</div>
+                       <div className="text-xs text-[#c27275]/60 mt-2">{(d.data?.difficulty ?? '').toString()} {(d.data?.age ?? '').toString()}</div>
+                     </div>
+                   ))}
+                 </div>
+               )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="border border-[#c27275]/20 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="font-semibold text-[#c27275]">Documents</div>
+                    {mobileLoading && <div className="text-xs text-[#c27275]/70">Chargement…</div>}
+                  </div>
+                  <div className="space-y-2 max-h-[420px] overflow-auto">
+                    {mobileDocs.length === 0 && (
+                      <div className="text-sm text-[#c27275]/70">Aucun document chargé.</div>
+                    )}
+                    {mobileDocs.map((d) => (
+                      <button
+                        key={d.id}
+                        onClick={async () => {
+                          setMobileSelectedDocId(d.id);
+                          await loadMobileDoc(mobileCollection, d.id);
+
+                          if (mobileCollection === 'videos') {
+                            const data: any = d.data || {};
+                            setVideoForm({
+                              title: (data.title ?? '').toString(),
+                              description: (data.description ?? '').toString(),
+                              duration: (data.duration ?? '').toString(),
+                              difficulty: (data.difficulty ?? '').toString(),
+                              age: (data.age ?? '').toString(),
+                              imagePath: (data.imagePath ?? data.imageUrl ?? '').toString(),
+                              imageStoragePath: (data.imageStoragePath ?? '').toString(),
+                              videoUrl: (data.videoUrl ?? '').toString(),
+                              videoStoragePath: (data.videoStoragePath ?? '').toString()
+                            });
+                          }
+
+                          if (mobileCollection === 'news_articles') {
+                            const data: any = d.data || {};
+                            const keyPoints = Array.isArray(data.keyPoints) ? data.keyPoints.map((x: any) => String(x)) : [];
+                            const publishedAtRaw = (data.publishedAt ?? '').toString();
+                            const publishedAtLocal = publishedAtRaw ? publishedAtRaw.slice(0, 16) : '';
+                            setNewsForm({
+                              tag: (data.tag ?? '').toString(),
+                              category: (data.category ?? '').toString(),
+                              title: (data.title ?? '').toString(),
+                              excerpt: (data.excerpt ?? '').toString(),
+                              imagePath: (data.imagePath ?? '').toString(),
+                              keyPointsText: keyPoints.join('\n'),
+                              publishedAt: publishedAtLocal
+                            });
+                          }
+
+                          if (mobileCollection === 'instructors') {
+                            const data: any = d.data || {};
+                            const tags = Array.isArray(data.tags) ? data.tags.map((x: any) => String(x)) : [];
+                            setInstructorAddressSuggestions([]);
+                            setInstructorForm({
+                              name: (data.name ?? '').toString(),
+                              specialty: (data.specialty ?? '').toString(),
+                              address: (data.address ?? '').toString(),
+                              latitude: data.latitude !== undefined && data.latitude !== null ? String(data.latitude) : '',
+                              longitude: data.longitude !== undefined && data.longitude !== null ? String(data.longitude) : '',
+                              imagePath: (data.imagePath ?? '').toString(),
+                              tagsText: tags.join('\n'),
+                              email: (data.email ?? '').toString()
+                            });
+                          }
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
+                          mobileSelectedDocId === d.id
+                            ? 'bg-[#c27275] text-white border-[#c27275]'
+                            : 'bg-white text-[#c27275] border-[#c27275]/20 hover:bg-[#fff1ee]'
+                        }`}
+                      >
+                        <div className="font-mono text-sm">{d.id}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="lg:col-span-2 border border-[#c27275]/20 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="font-semibold text-[#c27275]">Édition</div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setMobileAdvancedMode((v) => !v)}
+                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                      >
+                        {mobileAdvancedMode ? 'Mode simple' : 'Mode avancé'}
+                      </button>
+                      <button
+                        onClick={saveMobileDoc}
+                        disabled={mobileLoading || !mobileSelectedDocId}
+                        className="px-3 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275] disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Sauvegarder
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-sm text-[#c27275]/70 mb-2">
+                    Collection: <span className="font-mono">{mobileCollection}</span>
+                    {mobileSelectedDocId ? (
+                      <> • Doc: <span className="font-mono">{mobileSelectedDocId}</span></>
+                    ) : (
+                      <> • Sélectionne un document à gauche</>
+                    )}
+                  </div>
+                  {mobileAdvancedMode ? (
+                    <textarea
+                      value={mobileDocJson}
+                      onChange={(e) => setMobileDocJson(e.target.value)}
+                      className="w-full min-h-[420px] p-3 font-mono text-sm border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                      placeholder={`{\n  "title": "..."\n}`}
+                    />
+                  ) : (
+                    <div className="p-4 border border-[#c27275]/20 rounded-lg bg-[#fff1ee]/30 text-sm text-[#c27275]/80">
+                      Sélectionne un document à gauche, puis utilise le formulaire au-dessus (vidéos) ou clique sur “Mode avancé” pour éditer le JSON.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
