@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, Calendar, Plus, Trash2, Pencil, Clock, BookOpen, Package, HelpCircle, Save, X, Settings, Smartphone, AlertCircle } from 'lucide-react';
-import { addDoc, getDoc, getDocs, collection as firestoreCollection, doc as firestoreDoc, limit, orderBy, query, serverTimestamp, setDoc } from 'firebase/firestore';
+import { addDoc, deleteDoc, getDoc, getDocs, collection as firestoreCollection, doc as firestoreDoc, limit, orderBy, query, serverTimestamp, setDoc } from 'firebase/firestore';
 import { getDownloadURL, ref as storageRef, uploadBytes } from 'firebase/storage';
 import { authService } from '../lib/auth';
 import { supabase } from '../lib/supabase';
@@ -116,11 +116,9 @@ function AdminPage() {
   const [mobileCollection, setMobileCollection] = useState<'news_articles' | 'instructors' | 'videos'>('news_articles');
   const [mobileDocs, setMobileDocs] = useState<Array<{ id: string; data: any }>>([]);
   const [mobileSelectedDocId, setMobileSelectedDocId] = useState<string>('');
-  const [mobileDocJson, setMobileDocJson] = useState<string>('');
   const [mobileLoading, setMobileLoading] = useState(false);
   const [mobileError, setMobileError] = useState<string | null>(null);
   const [mobileSaveSuccess, setMobileSaveSuccess] = useState(false);
-  const [mobileAdvancedMode, setMobileAdvancedMode] = useState(false);
 
   const [videoForm, setVideoForm] = useState({
     title: '',
@@ -131,8 +129,12 @@ function AdminPage() {
     imagePath: '',
     imageStoragePath: '',
     videoUrl: '',
-    videoStoragePath: ''
+    videoStoragePath: '',
+    keyPointsText: '',
+    diagrams: [] as Array<{ id: string; title: string; imageUrl: string; imageStoragePath: string }>
   });
+
+  const createDiagramId = () => `diagram_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
   const [newsForm, setNewsForm] = useState({
     tag: '',
@@ -190,6 +192,7 @@ function AdminPage() {
 
   const videoFileInputRef = useRef<HTMLInputElement | null>(null);
   const videoImageFileInputRef = useRef<HTMLInputElement | null>(null);
+  const videoDiagramFileInputsRef = useRef<Array<HTMLInputElement | null>>([]);
   const newsImageFileInputRef = useRef<HTMLInputElement | null>(null);
   const instructorImageFileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -208,7 +211,6 @@ function AdminPage() {
     setMobileError(null);
     setMobileSaveSuccess(false);
     setMobileSelectedDocId('');
-    setMobileDocJson('');
     try {
       const baseRef = firestoreCollection(db, collectionName);
       const q = collectionName === 'news_articles'
@@ -227,45 +229,41 @@ function AdminPage() {
     }
   };
 
-  const loadMobileDoc = async (collectionName: typeof mobileCollection, docId: string) => {
-    if (!docId) return;
-    setMobileLoading(true);
-    setMobileError(null);
-    setMobileSaveSuccess(false);
-    try {
-      const ref = firestoreDoc(db, collectionName, docId);
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
-        setMobileError('Document introuvable');
-        setMobileDocJson('');
-        return;
-      }
-      setMobileDocJson(JSON.stringify(snap.data(), null, 2));
-    } catch (e: any) {
-      setMobileError(e?.message || 'Erreur lors du chargement du document');
-    } finally {
-      setMobileLoading(false);
-    }
-  };
-
-  const saveMobileDoc = async () => {
-    if (!mobileSelectedDocId) {
-      setMobileError('Sélectionne un document avant de sauvegarder');
-      return;
-    }
+  const deleteMobileDoc = async (collectionName: typeof mobileCollection, docId: string) => {
+    const ok = window.confirm('Êtes-vous sûr ?');
+    if (!ok) return;
     setMobileLoading(true);
     setMobileError(null);
     setMobileSaveSuccess(false);
     try {
       await ensureAnonymousAuth();
-      const parsed = JSON.parse(mobileDocJson || '{}');
-      const ref = firestoreDoc(db, mobileCollection, mobileSelectedDocId);
-      await setDoc(ref, parsed, { merge: true });
+      const ref = firestoreDoc(db, collectionName, docId);
+      await deleteDoc(ref);
+      if (mobileSelectedDocId === docId) {
+        setMobileSelectedDocId('');
+      }
       setMobileSaveSuccess(true);
-      await loadMobileCollection(mobileCollection);
+      await loadMobileCollection(collectionName);
       setTimeout(() => setMobileSaveSuccess(false), 2500);
     } catch (e: any) {
-      setMobileError(e?.message || 'Erreur lors de la sauvegarde');
+      setMobileError(e?.message || 'Erreur lors de la suppression');
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const loadMobileDoc = async (collectionName: typeof mobileCollection, docId: string) => {
+    setMobileLoading(true);
+    setMobileError(null);
+    try {
+      const ref = firestoreDoc(db, collectionName, docId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        setMobileError('Document introuvable');
+        return;
+      }
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors du chargement du document');
     } finally {
       setMobileLoading(false);
     }
@@ -277,6 +275,20 @@ function AdminPage() {
     setMobileSaveSuccess(false);
     try {
       await ensureAnonymousAuth();
+      const keyPoints = videoForm.keyPointsText
+        .split(/\r?\n|,/g)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const diagrams = Array.isArray(videoForm.diagrams)
+        ? videoForm.diagrams
+            .map((d) => ({
+              id: ((d as any)?.id ?? '').toString().trim() || createDiagramId(),
+              title: (d?.title ?? '').toString().trim(),
+              imageUrl: (d?.imageUrl ?? '').toString().trim(),
+              imageStoragePath: (d?.imageStoragePath ?? '').toString().trim()
+            }))
+            .filter((d) => d.title || d.imageUrl || d.imageStoragePath)
+        : [];
       const payload: any = {
         title: videoForm.title.trim(),
         description: videoForm.description.trim(),
@@ -287,6 +299,8 @@ function AdminPage() {
         imageStoragePath: videoForm.imageStoragePath.trim(),
         videoUrl: videoForm.videoUrl.trim(),
         videoStoragePath: videoForm.videoStoragePath.trim(),
+        keyPoints,
+        diagrams,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
@@ -308,7 +322,9 @@ function AdminPage() {
         imagePath: '',
         imageStoragePath: '',
         videoUrl: '',
-        videoStoragePath: ''
+        videoStoragePath: '',
+        keyPointsText: '',
+        diagrams: []
       });
       await loadMobileCollection('videos');
       setTimeout(() => setMobileSaveSuccess(false), 2500);
@@ -329,6 +345,20 @@ function AdminPage() {
     setMobileSaveSuccess(false);
     try {
       await ensureAnonymousAuth();
+      const keyPoints = videoForm.keyPointsText
+        .split(/\r?\n|,/g)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const diagrams = Array.isArray(videoForm.diagrams)
+        ? videoForm.diagrams
+            .map((d) => ({
+              id: ((d as any)?.id ?? '').toString().trim() || createDiagramId(),
+              title: (d?.title ?? '').toString().trim(),
+              imageUrl: (d?.imageUrl ?? '').toString().trim(),
+              imageStoragePath: (d?.imageStoragePath ?? '').toString().trim()
+            }))
+            .filter((d) => d.title || d.imageUrl || d.imageStoragePath)
+        : [];
       const payload: any = {
         title: videoForm.title.trim(),
         description: videoForm.description.trim(),
@@ -339,6 +369,8 @@ function AdminPage() {
         imageStoragePath: videoForm.imageStoragePath.trim(),
         videoUrl: videoForm.videoUrl.trim(),
         videoStoragePath: videoForm.videoStoragePath.trim(),
+        keyPoints,
+        diagrams,
         updatedAt: serverTimestamp()
       };
 
@@ -351,6 +383,20 @@ function AdminPage() {
       await setDoc(ref, payload, { merge: true });
       setMobileSaveSuccess(true);
       await loadMobileCollection('videos');
+      setMobileSelectedDocId('');
+      setVideoForm({
+        title: '',
+        description: '',
+        duration: '',
+        difficulty: '',
+        age: '',
+        imagePath: '',
+        imageStoragePath: '',
+        videoUrl: '',
+        videoStoragePath: '',
+        keyPointsText: '',
+        diagrams: []
+      });
       setTimeout(() => setMobileSaveSuccess(false), 2500);
     } catch (e: any) {
       setMobileError(e?.message || 'Erreur lors de la mise à jour de la vidéo');
@@ -437,6 +483,8 @@ function AdminPage() {
       await setDoc(ref, payload, { merge: true });
       setMobileSaveSuccess(true);
       await loadMobileCollection('news_articles');
+      setMobileSelectedDocId('');
+      setNewsForm({ tag: '', category: '', title: '', excerpt: '', imagePath: '', keyPointsText: '', publishedAt: '' });
       setTimeout(() => setMobileSaveSuccess(false), 2500);
     } catch (e: any) {
       setMobileError(e?.message || 'Erreur lors de la mise à jour de l’article');
@@ -533,6 +581,9 @@ function AdminPage() {
       await setDoc(ref, payload, { merge: true });
       setMobileSaveSuccess(true);
       await loadMobileCollection('instructors');
+      setMobileSelectedDocId('');
+      setInstructorAddressSuggestions([]);
+      setInstructorForm({ name: '', specialty: '', address: '', latitude: '', longitude: '', imagePath: '', tagsText: '', email: '' });
       setTimeout(() => setMobileSaveSuccess(false), 2500);
     } catch (e: any) {
       setMobileError(e?.message || 'Erreur lors de la mise à jour de la monitrice');
@@ -541,30 +592,13 @@ function AdminPage() {
     }
   };
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      loadBookings();
-      loadTimeSlots();
-      loadBlogPosts();
-      loadSettings();
-      loadServices();
-      loadFaqs();
-      loadClients();
-    }
-  }, [isLoggedIn]);
-
-  useEffect(() => {
-    const hasChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings);
-    setHasUnsavedChanges(hasChanges);
-  }, [settings, originalSettings]);
-
   const loadSettings = async () => {
     const { data, error } = await supabase
       .from('site_settings')
       .select('*')
       .eq('id', 'main')
       .single();
-    
+
     if (data && !error) {
       const loadedSettings = {
         siteName: data.site_name,
@@ -581,6 +615,30 @@ function AdminPage() {
       setOriginalSettings(loadedSettings);
     }
   };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadBookings();
+      loadTimeSlots();
+      loadBlogPosts();
+      loadServices();
+      loadFaqs();
+      loadSettings();
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    if (activeTab !== 'mobileApp') return;
+    if (mobileLoading) return;
+    if (mobileDocs.length > 0) return;
+    void loadMobileCollection(mobileCollection);
+  }, [activeTab, isLoggedIn, mobileCollection, mobileDocs.length, mobileLoading]);
+
+  useEffect(() => {
+    const hasChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings);
+    setHasUnsavedChanges(hasChanges);
+  }, [settings, originalSettings]);
 
   const saveSettings = async () => {
     const { error } = await supabase
@@ -1449,10 +1507,8 @@ function AdminPage() {
                     onChange={async (e) => {
                       const value = e.target.value as typeof mobileCollection;
                       setMobileCollection(value);
-                      setMobileAdvancedMode(false);
                       setMobileDocs([]);
                       setMobileSelectedDocId('');
-                      setMobileDocJson('');
                       setMobileError(null);
                       setMobileSaveSuccess(false);
 
@@ -1468,7 +1524,9 @@ function AdminPage() {
                         imagePath: '',
                         imageStoragePath: '',
                         videoUrl: '',
-                        videoStoragePath: ''
+                        videoStoragePath: '',
+                        keyPointsText: '',
+                        diagrams: []
                       });
 
                       await loadMobileCollection(value);
@@ -1656,7 +1714,6 @@ function AdminPage() {
                       type="button"
                       onClick={() => {
                         setMobileSelectedDocId('');
-                        setMobileDocJson('');
                         setInstructorAddressSuggestions([]);
                         setInstructorForm({ name: '', specialty: '', address: '', latitude: '', longitude: '', imagePath: '', tagsText: '', email: '' });
                       }}
@@ -1695,7 +1752,21 @@ function AdminPage() {
                       {(d.data?.imagePath || '').toString().startsWith('http') && (
                         <img src={d.data.imagePath} alt="" className="w-full h-32 object-cover rounded mb-3" />
                       )}
-                      <div className="font-semibold text-[#c27275]">{(d.data?.name ?? d.id).toString()}</div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-semibold text-[#c27275]">{(d.data?.name ?? d.id).toString()}</div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteMobileDoc('instructors', d.id);
+                          }}
+                          disabled={mobileLoading}
+                          className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                       <div className="text-sm text-[#c27275]/70">{(d.data?.specialty ?? '').toString()}</div>
                       <div className="text-xs text-[#c27275]/60 mt-2">{(d.data?.email ?? '').toString()}</div>
                     </div>
@@ -1819,7 +1890,6 @@ function AdminPage() {
                       type="button"
                       onClick={() => {
                         setMobileSelectedDocId('');
-                        setMobileDocJson('');
                         setNewsForm({ tag: '', category: '', title: '', excerpt: '', imagePath: '', keyPointsText: '', publishedAt: '' });
                       }}
                       className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
@@ -1827,6 +1897,55 @@ function AdminPage() {
                       Nouveau
                     </button>
                   </div>
+                </div>
+              )}
+
+              {mobileCollection === 'news_articles' && mobileDocs.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {mobileDocs.map((d) => (
+                    <div
+                      key={d.id}
+                      className="border border-[#c27275]/20 rounded-lg p-4 bg-white cursor-pointer hover:bg-[#fff1ee]/40"
+                      onClick={async () => {
+                        setMobileSelectedDocId(d.id);
+                        await loadMobileDoc('news_articles', d.id);
+                        const data: any = d.data || {};
+                        const keyPoints = Array.isArray(data.keyPoints) ? data.keyPoints.map((x: any) => String(x)) : [];
+                        const publishedAtRaw = (data.publishedAt ?? '').toString();
+                        const publishedAtLocal = publishedAtRaw ? publishedAtRaw.slice(0, 16) : '';
+                        setNewsForm({
+                          tag: (data.tag ?? '').toString(),
+                          category: (data.category ?? '').toString(),
+                          title: (data.title ?? '').toString(),
+                          excerpt: (data.excerpt ?? '').toString(),
+                          imagePath: (data.imagePath ?? '').toString(),
+                          keyPointsText: keyPoints.join('\n'),
+                          publishedAt: publishedAtLocal
+                        });
+                      }}
+                    >
+                      {(d.data?.imagePath || '').toString().startsWith('http') && (
+                        <img src={d.data.imagePath} alt="" className="w-full h-32 object-cover rounded mb-3" />
+                      )}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-semibold text-[#c27275]">{(d.data?.title ?? d.id).toString()}</div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteMobileDoc('news_articles', d.id);
+                          }}
+                          disabled={mobileLoading}
+                          className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="text-sm text-[#c27275]/70">{(d.data?.tag ?? '').toString()} {(d.data?.category ?? '').toString()}</div>
+                      <div className="text-xs text-[#c27275]/60 mt-2">{(d.data?.publishedAt ?? '').toString()}</div>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -1887,15 +2006,147 @@ function AdminPage() {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Image (URL ou chemin)</label>
-                      <input
-                        type="text"
-                        value={videoForm.imagePath}
-                        onChange={(e) => setVideoForm((s) => ({ ...s, imagePath: e.target.value }))}
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Points clés du portage (1 par ligne ou séparés par virgule)</label>
+                      <textarea
+                        value={videoForm.keyPointsText}
+                        onChange={(e) => setVideoForm((s) => ({ ...s, keyPointsText: e.target.value }))}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
-                        placeholder="Ex: https://... ou assets/..."
+                        rows={4}
                       />
-                      <div className="text-xs text-[#c27275]/70 mt-1">Ton modèle Flutter lit aussi `imageUrl` si présent.</div>
+                    </div>
+                    <div className="md:col-span-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-700">Schémas de montage</label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setVideoForm((s) => ({
+                              ...s,
+                              diagrams: [...(s.diagrams || []), { id: createDiagramId(), title: '', imageUrl: '', imageStoragePath: '' }]
+                            }))
+                          }
+                          className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                        >
+                          + Ajouter un schéma
+                        </button>
+                      </div>
+                      <div className="space-y-3">
+                        {(videoForm.diagrams || []).length === 0 && (
+                          <div className="text-sm text-[#c27275]/70">Aucun schéma.</div>
+                        )}
+                        {(videoForm.diagrams || []).map((diagram, idx) => (
+                          <div key={diagram.id || idx} className="border border-[#c27275]/20 rounded-lg p-3 bg-white">
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <div className="font-medium text-[#c27275] text-sm">Schéma {idx + 1}</div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setVideoForm((s) => ({
+                                    ...s,
+                                    diagrams: (s.diagrams || []).filter((_, i) => i !== idx)
+                                  }))
+                                }
+                                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                              >
+                                Supprimer
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Titre</label>
+                                <input
+                                  type="text"
+                                  value={diagram.title}
+                                  onChange={(e) =>
+                                    setVideoForm((s) => ({
+                                      ...s,
+                                      diagrams: (s.diagrams || []).map((d, i) =>
+                                        i === idx ? { ...d, title: e.target.value } : d
+                                      )
+                                    }))
+                                  }
+                                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                                  placeholder="Ex: Mise en place sur les épaules"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Image URL (optionnel)</label>
+                                <input
+                                  type="text"
+                                  value={diagram.imageUrl}
+                                  onChange={(e) =>
+                                    setVideoForm((s) => ({
+                                      ...s,
+                                      diagrams: (s.diagrams || []).map((d, i) =>
+                                        i === idx ? { ...d, imageUrl: e.target.value } : d
+                                      )
+                                    }))
+                                  }
+                                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                                  placeholder="https://..."
+                                />
+                              </div>
+                              <div className="md:col-span-2">
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Image Storage path (optionnel)</label>
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <input
+                                    type="text"
+                                    value={diagram.imageStoragePath}
+                                    onChange={(e) =>
+                                      setVideoForm((s) => ({
+                                        ...s,
+                                        diagrams: (s.diagrams || []).map((d, i) =>
+                                          i === idx ? { ...d, imageStoragePath: e.target.value } : d
+                                        )
+                                      }))
+                                    }
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                                    placeholder="Ex: videos/diagrams/mon-schema.jpg"
+                                  />
+                                  <input
+                                    ref={(el) => {
+                                      videoDiagramFileInputsRef.current[idx] = el;
+                                    }}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      const f = e.target.files?.[0];
+                                      if (!f) return;
+                                      setMobileLoading(true);
+                                      setMobileError(null);
+                                      try {
+                                        const { storagePath, url } = await uploadToStorage('videos/diagrams', f);
+                                        setVideoForm((s) => ({
+                                          ...s,
+                                          diagrams: (s.diagrams || []).map((d, i) =>
+                                            i === idx ? { ...d, imageStoragePath: storagePath, imageUrl: url } : d
+                                          )
+                                        }));
+                                        setMobileSaveSuccess(true);
+                                        setTimeout(() => setMobileSaveSuccess(false), 2500);
+                                      } catch (err: any) {
+                                        setMobileError(err?.message || 'Erreur upload image');
+                                      } finally {
+                                        setMobileLoading(false);
+                                        if (videoDiagramFileInputsRef.current[idx]) videoDiagramFileInputsRef.current[idx]!.value = '';
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => videoDiagramFileInputsRef.current[idx]?.click()}
+                                    disabled={mobileLoading}
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                                  >
+                                    Upload image
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Chemin Storage vidéo</label>
@@ -1986,16 +2237,6 @@ function AdminPage() {
                         </button>
                       </div>
                     </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Video URL (optionnel)</label>
-                      <input
-                        type="text"
-                        value={videoForm.videoUrl}
-                        onChange={(e) => setVideoForm((s) => ({ ...s, videoUrl: e.target.value }))}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
-                        placeholder="Ex: https://firebasestorage.googleapis.com/..."
-                      />
-                    </div>
                   </div>
                   <div className="mt-4 flex gap-2">
                     <button
@@ -2009,7 +2250,6 @@ function AdminPage() {
                       type="button"
                       onClick={() => {
                         setMobileSelectedDocId('');
-                        setMobileDocJson('');
                         setVideoForm({
                           title: '',
                           description: '',
@@ -2019,7 +2259,9 @@ function AdminPage() {
                           imagePath: '',
                           imageStoragePath: '',
                           videoUrl: '',
-                          videoStoragePath: ''
+                          videoStoragePath: '',
+                          keyPointsText: '',
+                          diagrams: []
                         });
                       }}
                       className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
@@ -2040,7 +2282,16 @@ function AdminPage() {
                          setMobileSelectedDocId(d.id);
                          await loadMobileDoc('videos', d.id);
                          const data: any = d.data || {};
-                         setVideoForm({
+                        const keyPoints = Array.isArray(data.keyPoints) ? data.keyPoints.map((x: any) => String(x)) : [];
+                        const diagrams = Array.isArray(data.diagrams)
+                          ? data.diagrams.map((x: any) => ({
+                            id: (x?.id ?? '').toString() || createDiagramId(),
+                            title: (x?.title ?? '').toString(),
+                            imageUrl: (x?.imageUrl ?? x?.imagePath ?? '').toString(),
+                            imageStoragePath: (x?.imageStoragePath ?? '').toString()
+                          }))
+                          : [];
+                        setVideoForm({
                            title: (data.title ?? '').toString(),
                            description: (data.description ?? '').toString(),
                            duration: (data.duration ?? '').toString(),
@@ -2049,14 +2300,30 @@ function AdminPage() {
                            imagePath: (data.imagePath ?? data.imageUrl ?? '').toString(),
                            imageStoragePath: (data.imageStoragePath ?? '').toString(),
                            videoUrl: (data.videoUrl ?? '').toString(),
-                           videoStoragePath: (data.videoStoragePath ?? '').toString()
+                           videoStoragePath: (data.videoStoragePath ?? '').toString(),
+                           keyPointsText: keyPoints.join('\n'),
+                           diagrams
                          });
                        }}
                      >
                        {(d.data?.imagePath || '').toString().startsWith('http') && (
                          <img src={d.data.imagePath} alt="" className="w-full h-32 object-cover rounded mb-3" />
                        )}
-                       <div className="font-semibold text-[#c27275]">{(d.data?.title ?? d.id).toString()}</div>
+                       <div className="flex items-start justify-between gap-2">
+                         <div className="font-semibold text-[#c27275]">{(d.data?.title ?? d.id).toString()}</div>
+                         <button
+                           type="button"
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             deleteMobileDoc('videos', d.id);
+                           }}
+                           disabled={mobileLoading}
+                           className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                           title="Supprimer"
+                         >
+                           <Trash2 className="w-4 h-4" />
+                         </button>
+                       </div>
                        <div className="text-sm text-[#c27275]/70">{(d.data?.duration ?? '').toString()}</div>
                        <div className="text-xs text-[#c27275]/60 mt-2">{(d.data?.difficulty ?? '').toString()} {(d.data?.age ?? '').toString()}</div>
                      </div>
@@ -2064,124 +2331,6 @@ function AdminPage() {
                  </div>
                )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <div className="border border-[#c27275]/20 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="font-semibold text-[#c27275]">Documents</div>
-                    {mobileLoading && <div className="text-xs text-[#c27275]/70">Chargement…</div>}
-                  </div>
-                  <div className="space-y-2 max-h-[420px] overflow-auto">
-                    {mobileDocs.length === 0 && (
-                      <div className="text-sm text-[#c27275]/70">Aucun document chargé.</div>
-                    )}
-                    {mobileDocs.map((d) => (
-                      <button
-                        key={d.id}
-                        onClick={async () => {
-                          setMobileSelectedDocId(d.id);
-                          await loadMobileDoc(mobileCollection, d.id);
-
-                          if (mobileCollection === 'videos') {
-                            const data: any = d.data || {};
-                            setVideoForm({
-                              title: (data.title ?? '').toString(),
-                              description: (data.description ?? '').toString(),
-                              duration: (data.duration ?? '').toString(),
-                              difficulty: (data.difficulty ?? '').toString(),
-                              age: (data.age ?? '').toString(),
-                              imagePath: (data.imagePath ?? data.imageUrl ?? '').toString(),
-                              imageStoragePath: (data.imageStoragePath ?? '').toString(),
-                              videoUrl: (data.videoUrl ?? '').toString(),
-                              videoStoragePath: (data.videoStoragePath ?? '').toString()
-                            });
-                          }
-
-                          if (mobileCollection === 'news_articles') {
-                            const data: any = d.data || {};
-                            const keyPoints = Array.isArray(data.keyPoints) ? data.keyPoints.map((x: any) => String(x)) : [];
-                            const publishedAtRaw = (data.publishedAt ?? '').toString();
-                            const publishedAtLocal = publishedAtRaw ? publishedAtRaw.slice(0, 16) : '';
-                            setNewsForm({
-                              tag: (data.tag ?? '').toString(),
-                              category: (data.category ?? '').toString(),
-                              title: (data.title ?? '').toString(),
-                              excerpt: (data.excerpt ?? '').toString(),
-                              imagePath: (data.imagePath ?? '').toString(),
-                              keyPointsText: keyPoints.join('\n'),
-                              publishedAt: publishedAtLocal
-                            });
-                          }
-
-                          if (mobileCollection === 'instructors') {
-                            const data: any = d.data || {};
-                            const tags = Array.isArray(data.tags) ? data.tags.map((x: any) => String(x)) : [];
-                            setInstructorAddressSuggestions([]);
-                            setInstructorForm({
-                              name: (data.name ?? '').toString(),
-                              specialty: (data.specialty ?? '').toString(),
-                              address: (data.address ?? '').toString(),
-                              latitude: data.latitude !== undefined && data.latitude !== null ? String(data.latitude) : '',
-                              longitude: data.longitude !== undefined && data.longitude !== null ? String(data.longitude) : '',
-                              imagePath: (data.imagePath ?? '').toString(),
-                              tagsText: tags.join('\n'),
-                              email: (data.email ?? '').toString()
-                            });
-                          }
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-lg border transition-colors ${
-                          mobileSelectedDocId === d.id
-                            ? 'bg-[#c27275] text-white border-[#c27275]'
-                            : 'bg-white text-[#c27275] border-[#c27275]/20 hover:bg-[#fff1ee]'
-                        }`}
-                      >
-                        <div className="font-mono text-sm">{d.id}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="lg:col-span-2 border border-[#c27275]/20 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="font-semibold text-[#c27275]">Édition</div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setMobileAdvancedMode((v) => !v)}
-                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                      >
-                        {mobileAdvancedMode ? 'Mode simple' : 'Mode avancé'}
-                      </button>
-                      <button
-                        onClick={saveMobileDoc}
-                        disabled={mobileLoading || !mobileSelectedDocId}
-                        className="px-3 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275] disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Sauvegarder
-                      </button>
-                    </div>
-                  </div>
-                  <div className="text-sm text-[#c27275]/70 mb-2">
-                    Collection: <span className="font-mono">{mobileCollection}</span>
-                    {mobileSelectedDocId ? (
-                      <> • Doc: <span className="font-mono">{mobileSelectedDocId}</span></>
-                    ) : (
-                      <> • Sélectionne un document à gauche</>
-                    )}
-                  </div>
-                  {mobileAdvancedMode ? (
-                    <textarea
-                      value={mobileDocJson}
-                      onChange={(e) => setMobileDocJson(e.target.value)}
-                      className="w-full min-h-[420px] p-3 font-mono text-sm border border-[#c27275]/20 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
-                      placeholder={`{\n  "title": "..."\n}`}
-                    />
-                  ) : (
-                    <div className="p-4 border border-[#c27275]/20 rounded-lg bg-[#fff1ee]/30 text-sm text-[#c27275]/80">
-                      Sélectionne un document à gauche, puis utilise le formulaire au-dessus (vidéos) ou clique sur “Mode avancé” pour éditer le JSON.
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
           )}
 
