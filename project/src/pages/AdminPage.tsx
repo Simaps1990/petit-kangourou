@@ -113,12 +113,17 @@ function AdminPage() {
   const [showFaqForm, setShowFaqForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; bookingId: string; clientName: string }>({ show: false, bookingId: '', clientName: '' });
 
-  const [mobileCollection, setMobileCollection] = useState<'news_articles' | 'instructors' | 'videos'>('news_articles');
+  const [mobileCollection, setMobileCollection] = useState<'news_articles' | 'instructors' | 'videos' | 'conseils'>('news_articles');
   const [mobileDocs, setMobileDocs] = useState<Array<{ id: string; data: any }>>([]);
   const [mobileSelectedDocId, setMobileSelectedDocId] = useState<string>('');
   const [mobileLoading, setMobileLoading] = useState(false);
   const [mobileError, setMobileError] = useState<string | null>(null);
   const [mobileSaveSuccess, setMobileSaveSuccess] = useState(false);
+
+  const [conseilsForm, setConseilsForm] = useState({
+    title: '',
+    text: ''
+  });
 
   const [videoForm, setVideoForm] = useState({
     title: '',
@@ -206,12 +211,40 @@ function AdminPage() {
     return { storagePath: path, url };
   };
 
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+    let t: number | undefined;
+    try {
+      return await Promise.race([
+        promise,
+        new Promise<T>((_, reject) => {
+          t = window.setTimeout(() => reject(new Error(message)), ms);
+        })
+      ]);
+    } finally {
+      if (t) window.clearTimeout(t);
+    }
+  };
+
   const loadMobileCollection = async (collectionName: typeof mobileCollection) => {
     setMobileLoading(true);
     setMobileError(null);
     setMobileSaveSuccess(false);
     setMobileSelectedDocId('');
     try {
+      await withTimeout(ensureAnonymousAuth(), 8000, 'Firebase Auth: timeout (vérifie VITE_FIREBASE_* et Anonymous Auth activé)');
+      if (collectionName === 'conseils') {
+        const ref = firestoreDoc(db, 'app_content', 'winter_tip');
+        const snap = await getDoc(ref);
+        const data = snap.exists() ? snap.data() : {};
+        setMobileDocs([{ id: 'winter_tip', data }]);
+        setMobileSelectedDocId('winter_tip');
+        setConseilsForm({
+          title: (data?.title ?? '').toString(),
+          text: (data?.text ?? '').toString()
+        });
+        return;
+      }
+
       const baseRef = firestoreCollection(db, collectionName);
       const q = collectionName === 'news_articles'
         ? query(baseRef, orderBy('publishedAt', 'desc'), limit(50))
@@ -222,8 +255,48 @@ function AdminPage() {
       const docs = snap.docs.map((d) => ({ id: d.id, data: d.data() }));
       setMobileDocs(docs);
     } catch (e: any) {
-      setMobileError(e?.message || 'Erreur lors du chargement Firestore');
+      const code = e?.code ? String(e.code) : '';
+      const msg = e?.message ? String(e.message) : 'Erreur lors du chargement Firestore';
+      setMobileError(code ? `${code}: ${msg}` : msg);
       setMobileDocs([]);
+    } finally {
+      setMobileLoading(false);
+    }
+  };
+
+  const saveConseilsWinterTip = async () => {
+    if (!conseilsForm.title.trim() && !conseilsForm.text.trim()) {
+      setMobileError('Renseigne au moins un titre ou un texte');
+      return;
+    }
+    setMobileLoading(true);
+    setMobileError(null);
+    setMobileSaveSuccess(false);
+    try {
+      await withTimeout(ensureAnonymousAuth(), 8000, 'Firebase Auth: timeout (vérifie VITE_FIREBASE_* et Anonymous Auth activé)');
+      const ref = firestoreDoc(db, 'app_content', 'winter_tip');
+      const snap = await getDoc(ref);
+      const payload: any = {
+        title: conseilsForm.title.trim(),
+        text: conseilsForm.text.trim(),
+        updatedAt: serverTimestamp()
+      };
+      if (!snap.exists()) {
+        payload.createdAt = serverTimestamp();
+      }
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (typeof v === 'string' && v.length === 0) delete payload[k];
+      });
+
+      await setDoc(ref, payload, { merge: true });
+      setMobileSaveSuccess(true);
+      await loadMobileCollection('conseils');
+      window.alert('Conseil enregistré.');
+      setTimeout(() => setMobileSaveSuccess(false), 2500);
+    } catch (e: any) {
+      setMobileError(e?.message || 'Erreur lors de la sauvegarde du conseil');
+      window.alert(e?.message || 'Erreur lors de la sauvegarde du conseil');
     } finally {
       setMobileLoading(false);
     }
@@ -627,13 +700,17 @@ function AdminPage() {
     }
   }, [isLoggedIn]);
 
+  const prevActiveTabRef = useRef(activeTab);
+
   useEffect(() => {
+    const prev = prevActiveTabRef.current;
+    prevActiveTabRef.current = activeTab;
     if (!isLoggedIn) return;
     if (activeTab !== 'mobileApp') return;
-    if (mobileLoading) return;
+    if (prev === 'mobileApp') return; // ne pas relancer pendant l'édition
     if (mobileDocs.length > 0) return;
     void loadMobileCollection(mobileCollection);
-  }, [activeTab, isLoggedIn, mobileCollection, mobileDocs.length, mobileLoading]);
+  }, [activeTab, isLoggedIn]);
 
   useEffect(() => {
     const hasChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings);
@@ -1536,6 +1613,7 @@ function AdminPage() {
                     <option value="news_articles">news_articles</option>
                     <option value="instructors">instructors</option>
                     <option value="videos">videos</option>
+                    <option value="conseils">conseils</option>
                   </select>
                   <button
                     onClick={() => loadMobileCollection(mobileCollection)}
@@ -1556,6 +1634,43 @@ function AdminPage() {
               {mobileError && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                   {mobileError}
+                </div>
+              )}
+
+              {mobileCollection === 'conseils' && (
+                <div className="border border-[#c27275]/20 rounded-lg p-4">
+                  <div className="font-semibold text-[#c27275] mb-4">Conseils (app_content / winter_tip)</div>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Titre</label>
+                      <input
+                        type="text"
+                        value={conseilsForm.title}
+                        onChange={(e) => setConseilsForm((s) => ({ ...s, title: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        placeholder="Titre du bloc"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Texte</label>
+                      <textarea
+                        value={conseilsForm.text}
+                        onChange={(e) => setConseilsForm((s) => ({ ...s, text: e.target.value }))}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c27275] focus:border-transparent"
+                        rows={5}
+                        placeholder="Texte affiché dans l’app"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={saveConseilsWinterTip}
+                      className="px-4 py-2 bg-[#c27275] text-white rounded-lg hover:bg-[#c27275]"
+                    >
+                      Enregistrer
+                    </button>
+                  </div>
                 </div>
               )}
 

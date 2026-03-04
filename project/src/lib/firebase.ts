@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, signInAnonymously } from 'firebase/auth';
+import { browserLocalPersistence, getAuth, setPersistence, signInAnonymously } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -19,8 +19,17 @@ export const storage = getStorage(app);
 export const auth = getAuth(app);
 
 let anonAuthPromise: Promise<void> | null = null;
+let authInitPromise: Promise<void> | null = null;
+
+const ensureAuthInitialized = async () => {
+  if (!authInitPromise) {
+    authInitPromise = setPersistence(auth, browserLocalPersistence).then(() => undefined);
+  }
+  await authInitPromise;
+};
 
 export const ensureAnonymousAuth = async () => {
+  await ensureAuthInitialized();
   if (auth.currentUser) return;
   if (!anonAuthPromise) {
     anonAuthPromise = signInAnonymously(auth)
